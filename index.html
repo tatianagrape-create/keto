@@ -1,29 +1,25 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { color: var(--tg-theme-text-color); background: var(--tg-theme-bg-color); }
-        .btn { background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); padding: 10px; border-radius: 8px; border: none; width: 100%; }
-        .card { padding: 15px; margin: 10px; border: 1px solid var(--tg-theme-hint-color); border-radius: 12px; }
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; 
+               background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
+        .info { border: 1px solid #ccc; padding: 20px; margin: 20px; border-radius: 10px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2 id="user-name">Привет!</h2>
-        <div id="stats">Загрузка данных...</div>
+    <h1>Keto Going</h1>
+    <div class="info">
+        <p>Привет, <span id="user-name">...</span>!</p>
+        <p>Твой ID: <span id="user-id">...</span></p>
     </div>
-    <button class="btn" onclick="tg.close()">Закрыть</button>
-
     <script>
         const tg = window.Telegram.WebApp;
-        tg.ready();
+        tg.ready(); // Сообщаем Telegram, что приложение загрузилось
         
-        document.getElementById('user-name').innerText = `Привет, ${tg.initDataUnsafe.user.first_name}!`;
-        
-        // Здесь будет запрос к твоему FastAPI для получения данных из БД
+        document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+        document.getElementById('user-id').innerText = tg.initDataUnsafe.user.id;
     </script>
 </body>
 </html>
