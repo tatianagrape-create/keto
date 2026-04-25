@@ -1,25 +1,165 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 50px; 
-               background-color: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
-        .info { border: 1px solid #ccc; padding: 20px; margin: 20px; border-radius: 10px; }
+        :root {
+            --tg-theme-bg: var(--tg-theme-bg-color, #ffffff);
+            --tg-theme-text: var(--tg-theme-text-color, #222222);
+            --tg-theme-hint: var(--tg-theme-hint-color, #999999);
+            --tg-theme-link: var(--tg-theme-link-color, #248b65);
+            --tg-theme-button: var(--tg-theme-button-color, #248b65);
+            --tg-theme-button-text: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg);
+            color: var(--tg-theme-text);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; height: 100vh;
+        }
+
+        .container { padding: 20px; flex-grow: 1; overflow-y: auto; }
+        .hidden { display: none; }
+
+        /* Карточки */
+        .card {
+            background: rgba(127, 127, 127, 0.05);
+            border-radius: 15px; padding: 15px; margin-bottom: 20px;
+            border: 1px solid rgba(127, 127, 127, 0.1);
+        }
+
+        h2 { margin-top: 0; font-size: 1.2em; color: var(--tg-theme-link); }
+
+        /* Поля ввода */
+        input, select {
+            width: 100%; padding: 12px; margin: 8px 0;
+            border-radius: 10px; border: 1px solid #ccc;
+            box-sizing: border-box; font-size: 16px;
+        }
+
+        button {
+            width: 100%; padding: 15px; border-radius: 12px; border: none;
+            background-color: var(--tg-theme-button);
+            color: var(--tg-theme-button-text);
+            font-weight: bold; cursor: pointer;
+        }
+
+        /* Навигация */
+        .nav {
+            display: flex; border-top: 1px solid rgba(127, 127, 127, 0.2);
+            background: var(--tg-theme-bg);
+        }
+        .nav-item {
+            flex: 1; text-align: center; padding: 15px;
+            cursor: pointer; font-size: 0.9em; font-weight: 500;
+        }
+        .nav-item.active { color: var(--tg-theme-link); border-top: 2px solid var(--tg-theme-link); }
+
+        .stat-val { font-size: 24px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>Keto Going</h1>
-    <div class="info">
-        <p>Привет, <span id="user-name">...</span>!</p>
-        <p>Твой ID: <span id="user-id">...</span></p>
+
+    <div id="diary-page" class="container">
+        <h2>Дневник кето</h2>
+        <div class="card">
+            <div id="carbs-display">
+                <span class="stat-val" id="current-carbs">0</span> 
+                <span style="color: var(--tg-theme-hint)">/ <span id="limit-carbs">20</span>г углеводов</span>
+            </div>
+            <p id="day-info" style="font-size: 0.8em; color: var(--tg-theme-hint)">Загрузка...</p>
+        </div>
     </div>
+
+    <div id="profile-page" class="container hidden">
+        <h2>Личный профиль</h2>
+        <div class="card">
+            <label>Возраст</label>
+            <input type="number" id="age" placeholder="Например: 30">
+            <label>Вес (кг)</label>
+            <input type="number" id="weight" placeholder="75.5">
+            <label>Рост (см)</label>
+            <input type="number" id="height" placeholder="175">
+            <button onclick="saveProfile()">Сохранить данные</button>
+        </div>
+        <div class="card">
+            <h3>Медицинское резюме</h3>
+            <p id="health-summary" style="font-size: 0.9em;">Загрузите анализы в чат бота, чтобы увидеть здесь выводы ИИ.</p>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div id="btn-diary" class="nav-item active" onclick="showPage('diary')">📊 Дневник</div>
+        <div id="btn-profile" class="nav-item" onclick="showPage('profile')">👤 Профиль</div>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
-        tg.ready(); // Сообщаем Telegram, что приложение загрузилось
+        tg.expand();
         
-        document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
-        document.getElementById('user-id').innerText = tg.initDataUnsafe.user.id;
+        // ВАЖНО: Замени на свой актуальный URL из ngrok
+        const API_URL = "https://твой-адрес.ngrok-free.app";
+
+        function showPage(page) {
+            if (page === 'diary') {
+                document.getElementById('diary-page').classList.remove('hidden');
+                document.getElementById('profile-page').classList.add('hidden');
+                document.getElementById('btn-diary').classList.add('active');
+                document.getElementById('btn-profile').classList.remove('active');
+                loadStats();
+            } else {
+                document.getElementById('diary-page').classList.add('hidden');
+                document.getElementById('profile-page').classList.remove('hidden');
+                document.getElementById('btn-diary').classList.remove('active');
+                document.getElementById('btn-profile').classList.add('active');
+                loadProfile();
+            }
+        }
+
+        async function loadStats() {
+            const userId = tg.initDataUnsafe.user.id;
+            try {
+                const res = await fetch(`${API_URL}/api/stats/${userId}`);
+                const data = await res.json();
+                document.getElementById('current-carbs').innerText = data.net_carbs;
+                document.getElementById('limit-carbs').innerText = data.limit;
+                document.getElementById('day-info').innerText = `День диеты: ${data.day}`;
+            } catch (e) { console.error("Ошибка загрузки стат"); }
+        }
+
+        async function loadProfile() {
+            const userId = tg.initDataUnsafe.user.id;
+            try {
+                const res = await fetch(`${API_URL}/api/stats/${userId}`); // Временно берем отсюда
+                const data = await res.json();
+                // Здесь логика подгрузки именно профиля, если данные есть
+            } catch (e) { console.error("Ошибка профиля"); }
+        }
+
+        async function saveProfile() {
+            const userId = tg.initDataUnsafe.user.id;
+            const profileData = {
+                age: document.getElementById('age').value,
+                weight: document.getElementById('weight').value,
+                height: document.getElementById('height').value
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/api/profile/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(profileData)
+                });
+                if (res.ok) tg.showAlert("Данные сохранены!");
+            } catch (e) { tg.showAlert("Ошибка при сохранении"); }
+        }
+
+        // Первый запуск
+        loadStats();
     </script>
 </body>
 </html>
