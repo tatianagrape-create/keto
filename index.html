@@ -8,14 +8,14 @@
         :root {
             --tg-theme-bg: var(--tg-theme-bg-color, #ffffff);
             --tg-theme-text: var(--tg-theme-text-color, #222222);
-            --tg-theme-hint: var(--tg-theme-hint-color, #999999);
             --tg-theme-link: var(--tg-theme-link-color, #248b65);
             --tg-theme-button: var(--tg-theme-button-color, #248b65);
             --tg-theme-button-text: var(--tg-theme-button-text-color, #ffffff);
+            --tg-theme-hint: var(--tg-theme-hint-color, #999999);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, sans-serif;
             background-color: var(--tg-theme-bg);
             color: var(--tg-theme-text);
             margin: 0; padding: 0;
@@ -25,7 +25,6 @@
         .container { padding: 20px; flex-grow: 1; overflow-y: auto; }
         .hidden { display: none; }
 
-        /* Карточки */
         .card {
             background: rgba(127, 127, 127, 0.05);
             border-radius: 15px; padding: 15px; margin-bottom: 20px;
@@ -33,45 +32,45 @@
         }
 
         h2 { margin-top: 0; font-size: 1.2em; color: var(--tg-theme-link); }
+        label { display: block; margin-bottom: 5px; font-size: 0.9em; color: var(--tg-theme-hint); }
 
-        /* Поля ввода */
-        input, select {
-            width: 100%; padding: 12px; margin: 8px 0;
+        input {
+            width: 100%; padding: 12px; margin-bottom: 15px;
             border-radius: 10px; border: 1px solid #ccc;
             box-sizing: border-box; font-size: 16px;
+            background: var(--tg-theme-bg); color: var(--tg-theme-text);
         }
 
         button {
             width: 100%; padding: 15px; border-radius: 12px; border: none;
             background-color: var(--tg-theme-button);
             color: var(--tg-theme-button-text);
-            font-weight: bold; cursor: pointer;
+            font-weight: bold; font-size: 16px; cursor: pointer;
         }
 
-        /* Навигация */
         .nav {
             display: flex; border-top: 1px solid rgba(127, 127, 127, 0.2);
-            background: var(--tg-theme-bg);
+            background: var(--tg-theme-bg); padding-bottom: env(safe-area-inset-bottom);
         }
         .nav-item {
             flex: 1; text-align: center; padding: 15px;
-            cursor: pointer; font-size: 0.9em; font-weight: 500;
+            cursor: pointer; font-size: 0.9em;
         }
-        .nav-item.active { color: var(--tg-theme-link); border-top: 2px solid var(--tg-theme-link); }
+        .nav-item.active { color: var(--tg-theme-link); font-weight: bold; border-top: 2px solid var(--tg-theme-link); }
 
-        .stat-val { font-size: 24px; font-weight: bold; }
+        .summary-text { font-size: 0.9em; line-height: 1.4; color: var(--tg-theme-text); white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
     <div id="diary-page" class="container">
-        <h2>Дневник кето</h2>
+        <h2>Мой прогресс</h2>
         <div class="card">
-            <div id="carbs-display">
-                <span class="stat-val" id="current-carbs">0</span> 
-                <span style="color: var(--tg-theme-hint)">/ <span id="limit-carbs">20</span>г углеводов</span>
+            <div style="font-size: 0.9em; color: var(--tg-theme-hint)">Углеводы сегодня:</div>
+            <div style="font-size: 32px; font-weight: bold;">
+                <span id="current-carbs">0</span> <span style="font-size: 16px; color: var(--tg-theme-hint)">/ <span id="limit-carbs">20</span>г</span>
             </div>
-            <p id="day-info" style="font-size: 0.8em; color: var(--tg-theme-hint)">Загрузка...</p>
+            <p id="day-info" style="font-size: 0.8em; margin-top: 10px;">Загрузка данных...</p>
         </div>
     </div>
 
@@ -79,16 +78,20 @@
         <h2>Личный профиль</h2>
         <div class="card">
             <label>Возраст</label>
-            <input type="number" id="age" placeholder="Например: 30">
+            <input type="number" id="input-age" placeholder="Сколько вам лет?">
+            
             <label>Вес (кг)</label>
-            <input type="number" id="weight" placeholder="75.5">
+            <input type="number" id="input-weight" step="0.1" placeholder="Ваш текущий вес">
+            
             <label>Рост (см)</label>
-            <input type="number" id="height" placeholder="175">
-            <button onclick="saveProfile()">Сохранить данные</button>
+            <input type="number" id="input-height" placeholder="Ваш рост">
+            
+            <button onclick="saveProfile()">Сохранить профиль</button>
         </div>
+
         <div class="card">
-            <h3>Медицинское резюме</h3>
-            <p id="health-summary" style="font-size: 0.9em;">Загрузите анализы в чат бота, чтобы увидеть здесь выводы ИИ.</p>
+            <h2>Анализы и здоровье</h2>
+            <div id="health-summary" class="summary-text">Тут появятся выводы ИИ, когда вы пришлете фото анализов боту в чат.</div>
         </div>
     </div>
 
@@ -101,8 +104,8 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        // ВАЖНО: Замени на свой актуальный URL из ngrok
-        const API_URL = "https://tatianagrape-create.github.io/keto/";
+        // ВСТАВЬ СВОЙ URL ИЗ NGROK СЮДА
+        const API_URL = "https://твой-адрес.ngrok-free.app";
 
         function showPage(page) {
             if (page === 'diary') {
@@ -127,25 +130,34 @@
                 const data = await res.json();
                 document.getElementById('current-carbs').innerText = data.net_carbs;
                 document.getElementById('limit-carbs').innerText = data.limit;
-                document.getElementById('day-info').innerText = `День диеты: ${data.day}`;
-            } catch (e) { console.error("Ошибка загрузки стат"); }
+                document.getElementById('day-info').innerText = `День на кето: ${data.day}`;
+            } catch (e) { console.error("Ошибка загрузки статистики"); }
         }
 
         async function loadProfile() {
             const userId = tg.initDataUnsafe.user.id;
             try {
-                const res = await fetch(`${API_URL}/api/stats/${userId}`); // Временно берем отсюда
+                // Пытаемся получить данные профиля
+                const res = await fetch(`${API_URL}/api/profile_data/${userId}`);
+                if (!res.ok) return;
                 const data = await res.json();
-                // Здесь логика подгрузки именно профиля, если данные есть
-            } catch (e) { console.error("Ошибка профиля"); }
+                
+                if (data.age) document.getElementById('input-age').value = data.age;
+                if (data.weight) document.getElementById('input-weight').value = data.weight;
+                if (data.height) document.getElementById('input-height').value = data.height;
+                if (data.health_summary) document.getElementById('health-summary').innerText = data.health_summary;
+            } catch (e) { console.error("Ошибка загрузки профиля"); }
         }
 
         async function saveProfile() {
             const userId = tg.initDataUnsafe.user.id;
+            
+            // Собираем данные с русскими ключами, как в твоем bot.py
             const profileData = {
-                age: document.getElementById('age').value,
-                weight: document.getElementById('weight').value,
-                height: document.getElementById('height').value
+                "возраст": document.getElementById('input-age').value,
+                "вес": document.getElementById('input-weight').value,
+                "рост": document.getElementById('input-height').value,
+                "пол": "не указан" // Можно добавить выбор позже
             };
 
             try {
@@ -154,12 +166,6 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(profileData)
                 });
-                if (res.ok) tg.showAlert("Данные сохранены!");
-            } catch (e) { tg.showAlert("Ошибка при сохранении"); }
-        }
-
-        // Первый запуск
-        loadStats();
-    </script>
-</body>
-</html>
+                
+                if (res.ok) {
+                    tg
