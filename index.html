@@ -12,18 +12,17 @@
         .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #fff; padding: 15px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .data-item { font-size: 11px; color: #999; text-transform: uppercase; }
         .data-value { font-size: 16px; font-weight: bold; color: #000; display: block; margin-top: 2px; }
-        .input-box { margin-bottom: 12px; }
-        label { display: block; font-size: 11px; color: #999; margin-bottom: 4px; }
-        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
+        .input-box { margin-bottom: 15px; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; background: #fff; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .btn-main { background: var(--accent); color: white; }
         .btn-sec { background: #fff; border: 1px solid var(--accent); color: var(--accent); }
-        .psychotype-res { background: #1a1a1a; color: #fff; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center; }
-        .psychotype-code { font-size: 24px; font-weight: bold; color: #007aff; margin-top: 5px; }
-        .card { background: rgba(255,255,255,0.7); padding: 10px; border-radius: 10px; margin: 8px 0; font-size: 13px; border: 2px solid transparent; }
+        .card { background: rgba(255,255,255,0.7); padding: 12px; border-radius: 10px; margin: 8px 0; font-size: 13px; border: 2px solid transparent; }
         .card.selected { border-color: var(--accent); background: #fff; font-weight: bold; }
         .card.disabled { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
-        .element-block { border-radius: 15px; padding: 15px; margin-top: 15px; }
+        .psychotype-res { background: #1a1a1a; color: #fff; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center; }
+        .psychotype-code { font-size: 24px; font-weight: bold; color: #007aff; }
+        .status-msg { background: #e2f7db; color: #28a745; padding: 12px; border-radius: 12px; font-size: 12px; text-align: center; margin-top: 10px; border: 1px solid #28a745; }
     </style>
 </head>
 <body>
@@ -32,7 +31,7 @@
     <div id="view-mode">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h2 style="margin:0">Профиль</h2>
-            <button class="btn-sec" style="width:auto; padding: 6px 12px;" onclick="toggleEdit()">Править</button>
+            <button class="btn-sec" style="width:auto; padding: 6px 15px;" onclick="toggleEdit()">Править</button>
         </div>
         <div class="data-grid">
             <div class="data-item">Возраст<span class="data-value" id="v-age">—</span></div>
@@ -47,8 +46,8 @@
             <div class="psychotype-code" id="v-psycho">—</div>
         </div>
         <div style="margin-top:20px;">
-            <div id="labs-container"><button class="btn btn-sec" onclick="openPicker('labs')">📄 Анализы</button></div>
-            <div id="nails-container"><button class="btn btn-sec" onclick="openPicker('nails')">💅 Ногти</button></div>
+            <div id="labs-container"><button class="btn btn-sec" onclick="openPicker('labs')">📄 Внести анализы</button></div>
+            <div id="nails-container"><button class="btn btn-sec" onclick="openPicker('nails')">💅 Фото ногтей</button></div>
         </div>
     </div>
 
@@ -58,8 +57,8 @@
         <div class="input-box"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
         <div class="input-box"><label>Рост (см)</label><input type="number" id="height"></div>
         <div class="input-box"><label>Вес (кг)</label><input type="number" id="weight" step="0.1"></div>
-        <div class="input-box"><label>Пульс в покое</label><input type="number" id="pulse" placeholder="60"></div>
-        <div class="input-box"><label>Давление</label>
+        <div class="input-box"><label>Пульс в покое</label><input type="number" id="pulse" placeholder="70"></div>
+        <div class="input-box"><label>Давление (ШАГ 10)</label>
             <div style="display:flex; align-items:center; gap:10px;">
                 <select id="bp_sys"></select> <span>/</span> <select id="bp_dia"></select>
             </div>
@@ -69,7 +68,7 @@
     </div>
 
     <div id="test-section" style="margin-top:30px; border-top: 1px dotted #ccc; padding-top: 20px;">
-        <h3>Тест на стихии</h3>
+        <h3>Тест на психотипаж</h3>
         <div id="test-container"></div>
         <button id="ready-btn" class="btn btn-main" style="display:none; background:#28a745;" onclick="validateAndSave(true)">ГОТОВО</button>
     </div>
@@ -80,7 +79,6 @@
 <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
-    
     const API_URL = "https://depletion-kindling-diffusive.ngrok-free.dev"; 
 
     let res = { air: null, fire: null, water: null, earth: null };
@@ -92,17 +90,16 @@
     ];
 
     function fillBP() {
-        const sys = document.getElementById('bp_sys');
-        const dia = document.getElementById('bp_dia');
-        for(let i=80; i<=200; i+=10) sys.innerHTML += `<option value="${i}">${i}</option>`;
-        for(let i=50; i<=120; i+=10) dia.innerHTML += `<option value="${i}">${i}</option>`;
-        sys.value = 120; dia.value = 80;
+        const s = document.getElementById('bp_sys'), d = document.getElementById('bp_dia');
+        for(let i=80; i<=200; i+=10) s.innerHTML += `<option value="${i}">${i}</option>`;
+        for(let i=50; i<=120; i+=10) d.innerHTML += `<option value="${i}">${i}</option>`;
+        s.value = 120; d.value = 80;
     }
 
     function renderTest() {
         const container = document.getElementById('test-container');
         elements.forEach(el => {
-            let h = `<div class="element-block" style="background:${el.c}"><strong>${el.n}</strong>`;
+            let h = `<div style="background:${el.c}; border-radius:15px; padding:15px; margin-top:15px;"><strong>Стихия ${el.n}</strong>`;
             el.q.forEach((q, i) => {
                 h += `<div class="card" data-type="${el.id}" data-pos="${i+1}" onclick="sel('${el.id}', ${i+1}, this)">${q}</div>`;
             });
@@ -117,6 +114,7 @@
             const r = await fetch(`${API_URL}/api/get_profile/${uid}`);
             const d = await r.json();
             if (d.status !== "new") {
+                // Показываем в профиле
                 document.getElementById('v-age').innerText = d.age || '—';
                 document.getElementById('v-gender').innerText = d.gender === 'male' ? 'М' : 'Ж';
                 document.getElementById('v-height').innerText = d.height ? d.height + ' см' : '—';
@@ -124,6 +122,7 @@
                 document.getElementById('v-bp').innerText = d.blood_pressure || '—';
                 document.getElementById('v-pulse').innerText = d.pulse ? d.pulse + ' уд/мин' : '—';
                 
+                // Сразу заполняем инпуты (чтобы при сохранении не было пустых строк)
                 document.getElementById('age').value = d.age || '';
                 document.getElementById('gender').value = d.gender || 'male';
                 document.getElementById('height').value = d.height || '';
@@ -147,11 +146,14 @@
     init();
 
     function sel(type, pos, el) {
-        for (let t in res) { if (res[t] === pos && t !== type) { tg.showAlert("Занято!"); return; } }
+        for (let t in res) { if (res[t] === pos && t !== type) { tg.showAlert("Эта позиция уже занята!"); return; } }
         document.querySelectorAll(`[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
         res[type] = pos;
-        
+        updateTestUI();
+    }
+
+    function updateTestUI() {
         const picked = Object.values(res).filter(v => v !== null);
         document.querySelectorAll('.card').forEach(c => {
             const p = parseInt(c.dataset.pos);
@@ -163,7 +165,7 @@
 
     function validateAndSave(isTest = false) {
         const age = parseInt(document.getElementById('age').value);
-        if (age < 18) return tg.showAlert("Возраст должен быть от 18 лет");
+        if (age < 18) return tg.showAlert("Программа доступна только с 18 лет!");
         saveData(isTest);
     }
 
@@ -185,7 +187,7 @@
                 body: JSON.stringify(payload)
             });
             if (isTest) tg.close(); else location.reload();
-        } catch (e) { tg.showAlert("Ошибка связи."); }
+        } catch (e) { tg.showAlert("Ошибка связи с сервером"); }
     }
 
     function toggleEdit() {
@@ -200,8 +202,11 @@
         const uid = tg.initDataUnsafe?.user?.id || 777;
         const form = new FormData(); form.append('file', input.files[0]);
         try {
-            await fetch(`${API_URL}/api/upload_photo/${uid}/${uploadMode}`, { method: 'POST', body: form });
-            location.reload();
+            const r = await fetch(`${API_URL}/api/upload_photo/${uid}/${uploadMode}`, { method: 'POST', body: form });
+            if(r.ok) {
+                const container = document.getElementById(uploadMode === 'labs' ? 'labs-container' : 'nails-container');
+                container.innerHTML = `<div class="status-msg">✅ Учтено. <span style="text-decoration:underline" onclick="openPicker('${uploadMode}')">Добавить еще</span></div>`;
+            }
         } catch (e) {}
     }
 </script>
