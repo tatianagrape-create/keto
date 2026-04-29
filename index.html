@@ -3,212 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Keto Going Mini App</title>
+    <title>Keto Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #fdfaf6;
-            --text-color: #333;
-            --accent-fire: #f7dcdb; /* Огонь */
-            --accent-water: #dbe4f7; /* Вода */
-            --accent-air: #f0f0f0; /* Воздух */
-            --accent-earth: #e2f7db; /* Земля */
-            --disabled-color: #ccc;
+            --bg: #fdfaf6;
+            --fire: #f7dcdb; --water: #dbe4f7; --air: #f2f2f2; --earth: #e2f7db;
+            --accent: #007aff;
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0; padding: 0;
-            display: flex; flex-direction: column; height: 100vh;
-        }
-
-        /* Навигация */
-        .tabs {
-            display: flex; justify-content: space-around;
-            background: #fff; border-top: 1px solid #eee;
-            padding: 10px 0; position: fixed; bottom: 0; width: 100%;
-        }
-        .tab-btn {
-            background: none; border: none; font-size: 12px; color: #888;
-            cursor: pointer; display: flex; flex-direction: column; align-items: center;
-        }
-        .tab-btn.active { color: #007aff; font-weight: bold; }
-
-        /* Контент */
-        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; padding-bottom: 80px; }
+        .content { padding: 20px; }
+        h2, h3 { color: #333; margin-top: 0; }
+        
+        /* Вкладки */
         .page { display: none; }
         .page.active { display: block; }
+        
+        /* Поля ввода */
+        .input-box { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+        
+        /* Кнопки */
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-main { background: var(--accent); color: white; }
+        .btn-sec { background: #fff; border: 1px solid var(--accent); color: var(--accent); }
 
-        /* Профиль: Инпуты */
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 14px; margin-bottom: 5px; color: #666; }
-        input, select {
-            width: 100%; padding: 12px; border: 1px solid #ddd;
-            border-radius: 10px; font-size: 16px; box-sizing: border-box;
-        }
+        /* Стихии */
+        .element-block { border-radius: 15px; padding: 15px; margin-top: 20px; }
+        .card { background: rgba(255,255,255,0.7); padding: 12px; border-radius: 10px; margin: 8px 0; font-size: 13px; border: 2px solid transparent; transition: 0.2s; }
+        .card.selected { border-color: var(--accent); background: #fff; font-weight: bold; }
+        .card.disabled { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
 
-        /* Кнопки действий */
-        .action-btn {
-            width: 100%; padding: 12px; margin-top: 10px;
-            border: none; border-radius: 10px; background: #007aff;
-            color: white; font-weight: bold; cursor: pointer;
-        }
-        .secondary-btn { background: #5856d6; margin-top: 5px; }
-
-        /* Психофизика: Карточки */
-        .psycho-section { margin-top: 30px; }
-        .element-block { margin-bottom: 25px; border-radius: 15px; padding: 15px; }
-        .fire { background-color: var(--accent-fire); }
-        .water { background-color: var(--accent-water); }
-        .air { background-color: var(--accent-air); }
-        .earth { background-color: var(--accent-earth); }
-
-        .option-card {
-            background: rgba(255,255,255,0.6); margin: 8px 0;
-            padding: 10px; border-radius: 8px; font-size: 13px;
-            border: 2px solid transparent; transition: 0.3s;
-        }
-        .option-card.selected { border-color: #007aff; background: #fff; }
-        .option-card.disabled { opacity: 0.2; pointer-events: none; }
+        /* Навигация снизу */
+        .nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #eee; padding: 10px 0; }
+        .nav-item { flex: 1; text-align: center; font-size: 10px; color: #999; border: none; background: none; }
+        .nav-item.active { color: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="content">
-    <div id="profile" class="page active">
-        <h2>Ваш профиль</h2>
-        <div class="input-group">
-            <label>Возраст</label>
-            <input type="number" id="age" placeholder="25">
-        </div>
-        <div class="input-group">
-            <label>Рост (см)</label>
-            <input type="number" id="height" placeholder="175">
-        </div>
-        <div class="input-group">
-            <label>Вес (кг)</label>
-            <input type="number" id="weight" placeholder="70">
-        </div>
-        <div class="input-group">
-            <label>Давление</label>
-            <input type="text" id="bp" placeholder="120/80">
-        </div>
-        <div class="input-group">
-            <label>Пол</label>
-            <select id="gender">
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
-            </select>
-        </div>
+    <div id="p-profile" class="page active">
+        <h2>Профиль</h2>
+        <div class="input-box"><label>Возраст</label><input type="number" id="age"></div>
+        <div class="input-box"><label>Рост (см)</label><input type="number" id="height"></div>
+        <div class="input-box"><label>Вес (кг)</label><input type="number" id="weight"></div>
+        <div class="input-box"><label>Давление</label><input type="text" id="bp" placeholder="120/80"></div>
+        <div class="input-box"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
+        
+        <button class="btn btn-main" onclick="saveAll()">Сохранить всё</button>
+        <button class="btn btn-sec" onclick="tgAction('labs')">📄 Внести анализы</button>
+        <button class="btn btn-sec" onclick="tgAction('nails')">💅 Фото ногтей</button>
 
-        <button class="action-btn" onclick="uploadData()">Сохранить параметры</button>
-        <button class="action-btn secondary-btn" onclick="sendAction('nails')">📷 Фото ногтей</button>
-        <button class="action-btn secondary-btn" onclick="sendAction('labs')">📄 Внести анализы</button>
-
-        <div class="psycho-section">
+        <div style="margin-top:30px">
             <h3>Тест: Психофизика</h3>
-            <p style="font-size: 12px; color: #666;">Выберите по одному описанию в каждом блоке. Позиции (1, 2, 3, 4) не могут повторяться.</p>
+            <p style="font-size: 11px; color: #888">Выберите ведущие силы (позиции 1-4 не должны повторяться)</p>
             
-            <div id="fire-block" class="element-block fire">
+            <div class="element-block" style="background: var(--fire)">
                 <strong>🔥 ОГОНЬ (Воля)</strong>
-                <div class="option-card" data-type="fire" data-pos="1" onclick="selectElement(this, 'fire', 1)">1. Я сам решаю, куда идти. Моя воля - закон.</div>
-                <div class="option-card" data-type="fire" data-pos="2" onclick="selectElement(this, 'fire', 2)">2. Добиваюсь целей мягко, вдохновляю других.</div>
-                <div class="option-card" data-type="fire" data-pos="3" onclick="selectElement(this, 'fire', 3)">3. Желания зыбки, мучительно принимаю решения.</div>
-                <div class="option-card" data-type="fire" data-pos="4" onclick="selectElement(this, 'fire', 4)">4. Делегирую выбор сильному лидеру.</div>
+                <div class="card" data-type="fire" data-pos="1" onclick="sel('fire', 1, this)">1. Ведущий: Я сам решаю, куда идти. Моя воля — закон.</div>
+                <div class="card" data-type="fire" data-pos="2" onclick="sel('fire', 2, this)">2. Проводник: Добиваюсь целей мягко, вдохновляю других.</div>
+                <div class="card" data-type="fire" data-pos="3" onclick="sel('fire', 3, this)">3. Хрупкий: Желания зыбки, мучительно принимаю решения.</div>
+                <div class="card" data-type="fire" data-pos="4" onclick="sel('fire', 4, this)">4. Опора: Делегирую право выбора сильному лидеру.</div>
             </div>
 
-            <div id="water-block" class="element-block water">
+            <div class="element-block" style="background: var(--water)">
                 <strong>🌊 ВОДА (Эмоции)</strong>
-                <div class="option-card" data-type="water" data-pos="1" onclick="selectElement(this, 'water', 1)">1. Я сам создаю и транслирую атмосферу.</div>
-                <div class="option-card" data-type="water" data-pos="2" onclick="selectElement(this, 'water', 2)">2. Мастер сопереживания, считываю других.</div>
-                <div class="option-card" data-type="water" data-pos="3" onclick="selectElement(this, 'water', 3)">3. Чувства опасны, прячусь за маской тишины.</div>
-                <div class="option-card" data-type="water" data-pos="4" onclick="selectElement(this, 'water', 4)">4. Спокойный резонатор, без бурных драм.</div>
+                <div class="card" data-type="water" data-pos="1" onclick="sel('water', 1, this)">1. Ведущий: Мое настроение — объективная реальность.</div>
+                <div class="card" data-type="water" data-pos="2" onclick="sel('water', 2, this)">2. Проводник: Мастер сопереживания, создаю уют.</div>
+                <div class="card" data-type="water" data-pos="3" onclick="sel('water', 3, this)">3. Хрупкий: Глубоко раним, прячусь за холодной маской.</div>
+                <div class="card" data-type="water" data-pos="4" onclick="sel('water', 4, this)">4. Опора: Спокойный резонатор, нет нужды в драмах.</div>
             </div>
+
+            <div class="element-block" style="background: var(--air)">
+                <strong>🌬️ ВОЗДУХ (Логика)</strong>
+                <div class="card" data-type="air" data-pos="1" onclick="sel('air', 1, this)">1. Ведущий: Мир — система. Мои принципы непоколебимы.</div>
+                <div class="card" data-type="air" data-pos="2" onclick="sel('air', 2, this)">2. Проводник: Обожаю процесс мышления и дискуссии.</div>
+                <div class="card" data-type="air" data-pos="3" onclick="sel('air', 3, this)">3. Хрупкий: Вечный студент, боюсь ошибиться.</div>
+                <div class="card" data-type="air" data-pos="4" onclick="sel('air', 4, this)">4. Опора: Верю авторитетам и четким инструкциям.</div>
             </div>
+
+            <div class="element-block" style="background: var(--earth)">
+                <strong>🌿 ЗЕМЛЯ (Физика)</strong>
+                <div class="card" data-type="earth" data-pos="1" onclick="sel('earth', 1, this)">1. Ведущий: Мой комфорт и здоровье — на первом месте.</div>
+                <div class="card" data-type="earth" data-pos="2" onclick="sel('earth', 2, this)">2. Проводник: Мастер уюта. Забота через еду и быт.</div>
+                <div class="card" data-type="earth" data-pos="3" onclick="sel('earth', 3, this)">3. Хрупкий: Мнительно отношусь к сигналам тела.</div>
+                <div class="card" data-type="earth" data-pos="4" onclick="sel('earth', 4, this)">4. Опора: Тело — инструмент, быт перекладываю на других.</div>
+            </div>
+        </div>
     </div>
 
-    <div id="menu" class="page"><h2>Меню</h2><p>В разработке...</p></div>
-    <div id="diary" class="page"><h2>Дневник</h2><p>Интеграция с базой...</p></div>
-    <div id="care" class="page"><h2>Забота</h2><p>Таймлайн восстановления...</p></div>
+    <div id="p-menu" class="page"><h2>Меню</h2><p>Индивидуальный рацион...</p></div>
+    <div id="p-diary" class="page"><h2>Дневник</h2><p>История КБЖУ...</p></div>
+    <div id="p-care" class="page"><h2>Забота</h2><p>Таймлайн восстановления...</p></div>
 </div>
 
-<nav class="tabs">
-    <button class="tab-btn active" onclick="showPage('profile', this)">👤<span>Профиль</span></button>
-    <button class="tab-btn" onclick="showPage('menu', this)">🍏<span>Меню</span></button>
-    <button class="tab-btn" onclick="showPage('diary', this)">📝<span>Дневник</span></button>
-    <button class="tab-btn" onclick="showPage('care', this)">❤️<span>Забота</span></button>
-</nav>
+<div class="nav">
+    <button class="nav-item active" onclick="tab('p-profile', this)">👤<br>Профиль</button>
+    <button class="nav-item" onclick="tab('p-menu', this)">🍏<br>Меню</button>
+    <button class="nav-item" onclick="tab('p-diary', this)">📝<br>Дневник</button>
+    <button class="nav-item" onclick="tab('p-care', this)">❤️<br>Забота</button>
+</div>
 
 <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    let selections = { fire: null, water: null, air: null, earth: null };
+    let res = { fire: null, water: null, air: null, earth: null };
 
-    function showPage(pageId, btn) {
+    function tab(id, b) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        btn.classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        b.classList.add('active');
     }
 
-    function selectElement(el, type, pos) {
-        // Проверка занятости позиции
-        for (let t in selections) {
-            if (selections[t] === pos && t !== type) {
-                alert("Эта позиция уже занята другой стихией!");
-                return;
+    function sel(type, pos, el) {
+        // Проверка: не занята ли эта позиция другой стихией
+        for (let t in res) {
+            if (res[t] === pos && t !== type) {
+                alert("Эта позиция уже занята!"); return;
             }
         }
-        
-        // Сброс выбора в блоке
+        // Сброс и выбор
         document.querySelectorAll(`[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
-        selections[type] = pos;
-
-        // Блокировка в других блоках
-        updateUI();
+        res[type] = pos;
+        updateBlock();
     }
 
-    function updateUI() {
-        const selectedPositions = Object.values(selections).filter(v => v !== null);
-        document.querySelectorAll('.option-card').forEach(card => {
-            const cardPos = parseInt(card.dataset.pos);
-            const cardType = card.dataset.type;
-            if (selectedPositions.includes(cardPos) && selections[cardType] !== cardPos) {
-                card.classList.add('disabled');
+    function updateBlock() {
+        const picked = Object.values(res).filter(v => v !== null);
+        document.querySelectorAll('.card').forEach(c => {
+            const cPos = parseInt(c.dataset.pos);
+            const cType = c.dataset.type;
+            if (picked.includes(cPos) && res[cType] !== cPos) {
+                c.classList.add('disabled');
             } else {
-                card.classList.remove('disabled');
+                c.classList.remove('disabled');
             }
         });
     }
 
-    async function uploadData() {
-        const userId = tg.initDataUnsafe.user.id;
-        const data = {
+    async function saveAll() {
+        const uid = tg.initDataUnsafe.user.id;
+        const body = {
             age: document.getElementById('age').value,
             height: document.getElementById('height').value,
             weight: document.getElementById('weight').value,
             blood_pressure: document.getElementById('bp').value,
             gender: document.getElementById('gender').value,
-            fire_pos: selections.fire,
-            water_pos: selections.water
+            fire_pos: res.fire, water_pos: res.water, air_pos: res.air, earth_pos: res.earth
         };
-
-        const response = await fetch(`http://192.168.10.110:8000/api/save_profile/${userId}`, {
+        // Замени IP на свой локальный адрес Mac (например 192.168.1.10)
+        await fetch(`http://192.168.10.110:8000/api/save_profile/${uid}`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
+            body: JSON.stringify(body)
         });
-        
-        if (response.ok) tg.close();
+        tg.close();
     }
 
-    function sendAction(type) {
-        // Закрываем приложение и отправляем команду боту в чат
-        tg.sendData(type);
+    function tgAction(type) {
+        tg.sendData(type); // Бот получит сообщение 'labs' или 'nails' и включит обработчик
     }
 </script>
 </body>
