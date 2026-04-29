@@ -3,30 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Keto Profile</title>
+    <title>Keto Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --bg: #fdfaf6; --fire: #f7dcdb; --water: #dbe4f7; --air: #f2f2f2; --earth: #e2f7db; --accent: #007aff; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; padding-bottom: 100px; color: #333; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px 20px 100px; color: #333; }
         .page { display: none; } .page.active { display: block; }
-        
         .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #fff; padding: 15px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .data-item { font-size: 13px; color: #666; }
+        .data-item { font-size: 11px; color: #999; text-transform: uppercase; }
         .data-value { font-size: 16px; font-weight: bold; color: #000; display: block; margin-top: 2px; }
-        
         .input-box { margin-bottom: 12px; }
-        label { display: block; font-size: 11px; color: #999; margin-bottom: 2px; text-transform: uppercase; }
-        input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
-
+        label { display: block; font-size: 11px; color: #999; margin-bottom: 4px; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; background: #fff; }
+        .bp-group { display: flex; align-items: center; gap: 8px; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .btn-main { background: var(--accent); color: white; }
         .btn-sec { background: #fff; border: 1px solid var(--accent); color: var(--accent); }
-        .status-msg { background: #e2f7db; color: #28a745; padding: 12px; border-radius: 12px; font-size: 13px; text-align: center; margin-top: 10px; border: 1px solid #28a745; }
-        
         .psychotype-res { background: #1a1a1a; color: #fff; padding: 15px; border-radius: 15px; margin-top: 15px; text-align: center; }
-        .psychotype-code { font-size: 24px; font-weight: bold; letter-spacing: 2px; color: #007aff; margin-top: 5px; }
-
-        .card { background: rgba(255,255,255,0.7); padding: 12px; border-radius: 10px; margin: 8px 0; font-size: 13px; border: 2px solid transparent; }
+        .psychotype-code { font-size: 22px; font-weight: bold; color: #007aff; margin-top: 5px; }
+        .card { background: rgba(255,255,255,0.7); padding: 10px; border-radius: 10px; margin: 8px 0; font-size: 13px; border: 2px solid transparent; }
         .card.selected { border-color: var(--accent); background: #fff; font-weight: bold; }
         .card.disabled { opacity: 0.2; pointer-events: none; filter: grayscale(1); }
         .element-block { border-radius: 15px; padding: 15px; margin-top: 20px; }
@@ -36,113 +31,108 @@
 
 <div id="p-profile" class="page active">
     <div id="view-mode">
-        <h2 style="display:flex; justify-content:space-between; align-items:center;">Профиль <span style="color:var(--accent); font-size:14px; font-weight:normal;" onclick="toggleEdit()">Править</span></h2>
-        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0">Профиль</h2>
+            <button class="btn-sec" style="width:auto; padding: 6px 16px; font-size:12px;" onclick="toggleEdit()">ПРАВИТЬ</button>
+        </div>
         <div class="data-grid">
             <div class="data-item">Возраст<span class="data-value" id="v-age">—</span></div>
             <div class="data-item">Пол<span class="data-value" id="v-gender">—</span></div>
             <div class="data-item">Рост<span class="data-value" id="v-height">—</span></div>
             <div class="data-item">Вес<span class="data-value" id="v-weight">—</span></div>
-            <div class="data-item" style="grid-column: span 2;">Давление<span class="data-value" id="v-bp">—</span></div>
+            <div class="data-item">Давление<span class="data-value" id="v-bp">—</span></div>
+            <div class="data-item">Пульс<span class="data-value" id="v-pulse">—</span></div>
         </div>
-        
-        <div id="psychotype-display" class="psychotype-res" style="display:none">
-            <div style="font-size:12px; opacity:0.7;">Ваш психотип:</div>
+        <div id="psy-display" class="psychotype-res" style="display:none">
+            <div style="font-size:11px; opacity:0.6;">ВАШ ПСИХОТИП</div>
             <div class="psychotype-code" id="v-psycho">—</div>
         </div>
-
-        <div style="margin-top:20px;">
-            <div id="labs-container">
-                <button class="btn btn-sec" onclick="openPicker('labs')">📄 Внести анализы</button>
-            </div>
-            <div id="nails-container">
-                <button class="btn btn-sec" onclick="openPicker('nails')">💅 Фото ногтей</button>
-            </div>
-        </div>
+        <div style="margin-top:20px;" id="files-status"></div>
     </div>
 
     <div id="edit-mode" style="display:none">
-        <h2>Настройка данных</h2>
-        <div class="input-box"><label>Возраст</label><input type="number" id="age"></div>
+        <h2>Редактирование</h2>
+        <div class="input-box"><label>Возраст (18+)</label><input type="number" id="age"></div>
         <div class="input-box"><label>Пол</label>
-            <select id="gender">
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
-            </select>
+            <select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select>
         </div>
         <div class="input-box"><label>Рост (см)</label><input type="number" id="height"></div>
         <div class="input-box"><label>Вес (кг)</label><input type="number" id="weight"></div>
-        <div class="input-box"><label>Давление</label><input type="text" id="bp" placeholder="120/80"></div>
-        <button class="btn btn-main" onclick="saveData(false)">Сохранить</button>
-        <button class="btn btn-sec" onclick="toggleEdit()">Отмена</button>
+        <div class="input-box"><label>Пульс в покое</label><input type="number" id="pulse" placeholder="60-80"></div>
+        <div class="input-box"><label>Давление (Шаг 10)</label>
+            <div class="bp-group">
+                <select id="bp_sys"></select> <span>/</span> <select id="bp_dia"></select>
+            </div>
+        </div>
+        <button class="btn btn-main" onclick="preSave()">СОХРАНИТЬ</button>
+        <button class="btn-sec" style="width:100%" onclick="toggleEdit()">ОТМЕНА</button>
     </div>
 
-    <div id="test-section" style="margin-top:40px; border-top: 1px solid #ddd; padding-top: 20px;">
+    <div id="test-section" style="margin-top:30px; border-top: 1px dotted #ccc; padding-top: 20px;">
         <h3>Тест на психотипаж</h3>
-        <div class="element-block" style="background: var(--air)"><strong>Стихия ВОЗДУХ (Air - A)</strong>
-            <div class="card" data-type="air" data-pos="1" onclick="sel('air', 1, this)">1. Ведущий: Мир — система.</div>
-            <div class="card" data-type="air" data-pos="2" onclick="sel('air', 2, this)">2. Проводник: Мыслительный процесс.</div>
-            <div class="card" data-type="air" data-pos="3" onclick="sel('air', 3, this)">3. Хрупкий: Боязнь ошибки.</div>
-            <div class="card" data-type="air" data-pos="4" onclick="sel('air', 4, this)">4. Опора: Инструкции и правила.</div>
-        </div>
-        <div class="element-block" style="background: var(--fire)"><strong>Стихия ОГОНЬ (Fire - F)</strong>
-            <div class="card" data-type="fire" data-pos="1" onclick="sel('fire', 1, this)">1. Ведущий: Моя воля — закон.</div>
-            <div class="card" data-type="fire" data-pos="2" onclick="sel('fire', 2, this)">2. Проводник: Вдохновляю других.</div>
-            <div class="card" data-type="fire" data-pos="3" onclick="sel('fire', 3, this)">3. Хрупкий: Трудный выбор.</div>
-            <div class="card" data-type="fire" data-pos="4" onclick="sel('fire', 4, this)">4. Опора: Делегирую выбор.</div>
-        </div>
-        <div class="element-block" style="background: var(--water)"><strong>Стихия ВОДА (Water - W)</strong>
-            <div class="card" data-type="water" data-pos="1" onclick="sel('water', 1, this)">1. Ведущий: Эмоции — реальность.</div>
-            <div class="card" data-type="water" data-pos="2" onclick="sel('water', 2, this)">2. Проводник: Эмпатия и уют.</div>
-            <div class="card" data-type="water" data-pos="3" onclick="sel('water', 3, this)">3. Хрупкий: Скрытность и ранимость.</div>
-            <div class="card" data-type="water" data-pos="4" onclick="sel('water', 4, this)">4. Опора: Спокойствие.</div>
-        </div>
-        <div class="element-block" style="background: var(--earth)"><strong>Стихия ЗЕМЛЯ (Earth - E)</strong>
-            <div class="card" data-type="earth" data-pos="1" onclick="sel('earth', 1, this)">1. Ведущий: Телесное здоровье.</div>
-            <div class="card" data-type="earth" data-pos="2" onclick="sel('earth', 2, this)">2. Проводник: Забота и быт.</div>
-            <div class="card" data-type="earth" data-pos="3" onclick="sel('earth', 3, this)">3. Хрупкий: Мнительность к телу.</div>
-            <div class="card" data-type="earth" data-pos="4" onclick="sel('earth', 4, this)">4. Опора: Тело — инструмент.</div>
-        </div>
-        <button id="ready-btn" class="btn btn-main" style="display:none; background:#28a745;" onclick="saveData(true)">ГОТОВО</button>
+        <div id="test-container"></div>
+        <button id="ready-btn" class="btn btn-main" style="display:none; background:#28a745;" onclick="preSave(true)">ГОТОВО</button>
     </div>
 </div>
-
-<input type="file" id="file-picker" style="display:none" onchange="processUpload(this)">
 
 <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
-    
     const API_URL = "https://depletion-kindling-diffusive.ngrok-free.dev"; 
 
-    let res = { fire: null, water: null, air: null, earth: null };
-    let uploadType = '';
+    let res = { air: null, fire: null, water: null, earth: null };
+
+    function fillBP() {
+        const sys = document.getElementById('bp_sys');
+        const dia = document.getElementById('bp_dia');
+        for(let i=80; i<=200; i+=10) sys.innerHTML += `<option value="${i}">${i}</option>`;
+        for(let i=50; i<=120; i+=10) dia.innerHTML += `<option value="${i}">${i}</option>`;
+        sys.value = 120; dia.value = 80;
+    }
+
+    function renderTest() {
+        const container = document.getElementById('test-container');
+        const configs = [
+            {id:'air', n:'Air (A)', c:'#f2f2f2'}, {id:'fire', n:'Fire (F)', c:'#f7dcdb'},
+            {id:'water', n:'Water (W)', c:'#dbe4f7'}, {id:'earth', n:'Earth (E)', c:'#e2f7db'}
+        ];
+        configs.forEach(el => {
+            let h = `<div class="element-block" style="background:${el.c}"><strong>${el.n}</strong>`;
+            for(let i=1; i<=4; i++) h += `<div class="card" data-type="${el.id}" data-pos="${i}" onclick="sel('${el.id}', ${i}, this)">Позиция ${i}</div>`;
+            container.innerHTML += h + `</div>`;
+        });
+    }
 
     async function init() {
+        fillBP(); renderTest();
         const uid = tg.initDataUnsafe?.user?.id || 777;
         try {
             const r = await fetch(`${API_URL}/api/get_profile/${uid}`);
             const d = await r.json();
             if (d.status !== "new") {
-                // Заполняем вид (просмотр)
                 document.getElementById('v-age').innerText = d.age || '—';
-                document.getElementById('v-gender').innerText = d.gender === 'male' ? 'Мужской' : (d.gender === 'female' ? 'Женский' : '—');
+                document.getElementById('v-gender').innerText = d.gender === 'male' ? 'М' : 'Ж';
                 document.getElementById('v-height').innerText = d.height ? d.height + ' см' : '—';
                 document.getElementById('v-weight').innerText = d.weight ? d.weight + ' кг' : '—';
                 document.getElementById('v-bp').innerText = d.blood_pressure || '—';
+                document.getElementById('v-pulse').innerText = d.pulse ? d.pulse + ' уд/мин' : '—';
                 
-                // ВАЖНО: Заполняем инпуты (редактирование), чтобы при сохранении данные не терлись
                 document.getElementById('age').value = d.age || '';
                 document.getElementById('gender').value = d.gender || 'male';
                 document.getElementById('height').value = d.height || '';
                 document.getElementById('weight').value = d.weight || '';
-                document.getElementById('bp').value = d.blood_pressure || '';
+                document.getElementById('pulse').value = d.pulse || '';
+                
+                if (d.blood_pressure) {
+                    const parts = d.blood_pressure.split('/');
+                    document.getElementById('bp_sys').value = parts[0];
+                    document.getElementById('bp_dia').value = parts[1];
+                }
 
                 if (d.air_pos) {
-                    res = { fire: d.fire_pos, water: d.water_pos, air: d.air_pos, earth: d.earth_pos };
-                    const code = `A${res.air}, F${res.fire}, W${res.water}, E${res.earth}`;
-                    document.getElementById('v-psycho').innerText = code;
-                    document.getElementById('psychotype-display').style.display = 'block';
+                    res = { air: d.air_pos, fire: d.fire_pos, water: d.water_pos, earth: d.earth_pos };
+                    document.getElementById('v-psycho').innerText = `A${res.air}, F${res.fire}, W${res.water}, E${res.earth}`;
+                    document.getElementById('psy-display').style.display = 'block';
                     document.getElementById('test-section').style.display = 'none';
                 }
             }
@@ -150,19 +140,15 @@
     }
     init();
 
-    function toggleEdit() {
-        const v = document.getElementById('view-mode');
-        const e = document.getElementById('edit-mode');
-        v.style.display = (v.style.display === 'none') ? 'block' : 'none';
-        e.style.display = (e.style.display === 'none') ? 'block' : 'none';
-    }
-
     function sel(type, pos, el) {
-        for (let t in res) { if (res[t] === pos && t !== type) { tg.showAlert("Эта позиция занята!"); return; } }
+        for (let t in res) { if (res[t] === pos && t !== type) { tg.showAlert("Эта позиция уже занята!"); return; } }
         document.querySelectorAll(`[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
         res[type] = pos;
-        
+        updateTest();
+    }
+
+    function updateTest() {
         const picked = Object.values(res).filter(v => v !== null);
         document.querySelectorAll('.card').forEach(c => {
             const p = parseInt(c.dataset.pos);
@@ -172,40 +158,38 @@
         if (picked.length === 4) document.getElementById('ready-btn').style.display = 'block';
     }
 
-    async function saveData(isTest) {
+    function preSave(isTest = false) {
+        const age = document.getElementById('age').value;
+        if (age && parseInt(age) < 18) return tg.showAlert("Только для лиц старше 18 лет");
+        save(isTest);
+    }
+
+    async function save(isTest) {
         const uid = tg.initDataUnsafe?.user?.id || 777;
+        const bp = document.getElementById('bp_sys').value + '/' + document.getElementById('bp_dia').value;
         const payload = {
             age: document.getElementById('age').value,
             gender: document.getElementById('gender').value,
             height: document.getElementById('height').value,
             weight: document.getElementById('weight').value,
-            blood_pressure: document.getElementById('bp').value,
+            pulse: document.getElementById('pulse').value,
+            blood_pressure: bp,
             fire_pos: res.fire, water_pos: res.water, air_pos: res.air, earth_pos: res.earth
         };
-
         try {
-            await fetch(`${API_URL}/api/save_profile/${uid}`, {
+            const r = await fetch(`${API_URL}/api/save_profile/${uid}`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
-            if (isTest) tg.close(); else location.reload();
-        } catch (e) { tg.showAlert("Ошибка связи."); }
+            if (r.ok) { if (isTest) tg.close(); else location.reload(); }
+        } catch (e) { tg.showAlert("Ошибка связи с сервером"); }
     }
 
-    function openPicker(t) { uploadType = t; document.getElementById('file-picker').click(); }
-
-    async function processUpload(input) {
-        if (!input.files[0]) return;
-        const uid = tg.initDataUnsafe?.user?.id || 777;
-        const form = new FormData();
-        form.append('file', input.files[0]);
-        try {
-            const r = await fetch(`${API_URL}/api/upload_photo/${uid}/${uploadType}`, { method: 'POST', body: form });
-            if (r.ok) {
-                const container = document.getElementById(uploadType === 'labs' ? 'labs-container' : 'nails-container');
-                container.innerHTML = `<div class="status-msg">✅ Результаты учтены в программе.<br><span style="color:var(--accent); text-decoration:underline; font-size:11px;" onclick="openPicker('${uploadType}')">Добавить еще</span></div>`;
-            }
-        } catch (e) { tg.showAlert("Ошибка загрузки."); }
+    function toggleEdit() {
+        const v = document.getElementById('view-mode');
+        const e = document.getElementById('edit-mode');
+        v.style.display = (v.style.display === 'none') ? 'block' : 'none';
+        e.style.display = (e.style.display === 'none') ? 'block' : 'none';
     }
 </script>
 </body>
