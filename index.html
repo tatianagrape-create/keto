@@ -2,119 +2,214 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Keto Going Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f0f0; padding: 20px; margin: 0; }
-        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .hidden { display: none; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #248b65; color: white; border: none; border-radius: 8px; font-weight: bold; }
-        .nav { position: fixed; bottom: 0; left: 0; width: 100%; display: flex; background: white; border-top: 1px solid #ddd; }
-        .nav-item { flex: 1; text-align: center; padding: 15px; cursor: pointer; }
-        .active { color: #248b65; font-weight: bold; }
+        :root {
+            --bg-color: #fdfaf6;
+            --text-color: #333;
+            --accent-fire: #f7dcdb; /* Огонь */
+            --accent-water: #dbe4f7; /* Вода */
+            --accent-air: #f0f0f0; /* Воздух */
+            --accent-earth: #e2f7db; /* Земля */
+            --disabled-color: #ccc;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; height: 100vh;
+        }
+
+        /* Навигация */
+        .tabs {
+            display: flex; justify-content: space-around;
+            background: #fff; border-top: 1px solid #eee;
+            padding: 10px 0; position: fixed; bottom: 0; width: 100%;
+        }
+        .tab-btn {
+            background: none; border: none; font-size: 12px; color: #888;
+            cursor: pointer; display: flex; flex-direction: column; align-items: center;
+        }
+        .tab-btn.active { color: #007aff; font-weight: bold; }
+
+        /* Контент */
+        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Профиль: Инпуты */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 14px; margin-bottom: 5px; color: #666; }
+        input, select {
+            width: 100%; padding: 12px; border: 1px solid #ddd;
+            border-radius: 10px; font-size: 16px; box-sizing: border-box;
+        }
+
+        /* Кнопки действий */
+        .action-btn {
+            width: 100%; padding: 12px; margin-top: 10px;
+            border: none; border-radius: 10px; background: #007aff;
+            color: white; font-weight: bold; cursor: pointer;
+        }
+        .secondary-btn { background: #5856d6; margin-top: 5px; }
+
+        /* Психофизика: Карточки */
+        .psycho-section { margin-top: 30px; }
+        .element-block { margin-bottom: 25px; border-radius: 15px; padding: 15px; }
+        .fire { background-color: var(--accent-fire); }
+        .water { background-color: var(--accent-water); }
+        .air { background-color: var(--accent-air); }
+        .earth { background-color: var(--accent-earth); }
+
+        .option-card {
+            background: rgba(255,255,255,0.6); margin: 8px 0;
+            padding: 10px; border-radius: 8px; font-size: 13px;
+            border: 2px solid transparent; transition: 0.3s;
+        }
+        .option-card.selected { border-color: #007aff; background: #fff; }
+        .option-card.disabled { opacity: 0.2; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div id="page-diary">
-        <div class="card">
-            <h2>Дневник кето</h2>
-            <p>Углеводы сегодня: <b id="carbs">0</b> / <span id="limit">20</span>г</p>
-            <p id="day">Загрузка...</p>
-        </div>
-    </div>
-
-    <div id="page-profile" class="hidden">
-        <div class="card">
-            <h2>Профиль</h2>
-            <label>Возраст:</label>
+<div class="content">
+    <div id="profile" class="page active">
+        <h2>Ваш профиль</h2>
+        <div class="input-group">
+            <label>Возраст</label>
             <input type="number" id="age" placeholder="25">
-            <label>Вес (кг):</label>
-            <input type="number" id="weight" step="0.1" placeholder="70.5">
-            <label>Рост (см):</label>
-            <input type="number" id="height" placeholder="170">
-            <button onclick="saveData()">Сохранить</button>
         </div>
-        <div class="card">
-            <h3>Резюме здоровья:</h3>
-            <p id="health">Здесь будут ваши анализы</p>
+        <div class="input-group">
+            <label>Рост (см)</label>
+            <input type="number" id="height" placeholder="175">
         </div>
+        <div class="input-group">
+            <label>Вес (кг)</label>
+            <input type="number" id="weight" placeholder="70">
+        </div>
+        <div class="input-group">
+            <label>Давление</label>
+            <input type="text" id="bp" placeholder="120/80">
+        </div>
+        <div class="input-group">
+            <label>Пол</label>
+            <select id="gender">
+                <option value="male">Мужской</option>
+                <option value="female">Женский</option>
+            </select>
+        </div>
+
+        <button class="action-btn" onclick="uploadData()">Сохранить параметры</button>
+        <button class="action-btn secondary-btn" onclick="sendAction('nails')">📷 Фото ногтей</button>
+        <button class="action-btn secondary-btn" onclick="sendAction('labs')">📄 Внести анализы</button>
+
+        <div class="psycho-section">
+            <h3>Тест: Психофизика</h3>
+            <p style="font-size: 12px; color: #666;">Выберите по одному описанию в каждом блоке. Позиции (1, 2, 3, 4) не могут повторяться.</p>
+            
+            <div id="fire-block" class="element-block fire">
+                <strong>🔥 ОГОНЬ (Воля)</strong>
+                <div class="option-card" data-type="fire" data-pos="1" onclick="selectElement(this, 'fire', 1)">1. Я сам решаю, куда идти. Моя воля - закон.</div>
+                <div class="option-card" data-type="fire" data-pos="2" onclick="selectElement(this, 'fire', 2)">2. Добиваюсь целей мягко, вдохновляю других.</div>
+                <div class="option-card" data-type="fire" data-pos="3" onclick="selectElement(this, 'fire', 3)">3. Желания зыбки, мучительно принимаю решения.</div>
+                <div class="option-card" data-type="fire" data-pos="4" onclick="selectElement(this, 'fire', 4)">4. Делегирую выбор сильному лидеру.</div>
+            </div>
+
+            <div id="water-block" class="element-block water">
+                <strong>🌊 ВОДА (Эмоции)</strong>
+                <div class="option-card" data-type="water" data-pos="1" onclick="selectElement(this, 'water', 1)">1. Я сам создаю и транслирую атмосферу.</div>
+                <div class="option-card" data-type="water" data-pos="2" onclick="selectElement(this, 'water', 2)">2. Мастер сопереживания, считываю других.</div>
+                <div class="option-card" data-type="water" data-pos="3" onclick="selectElement(this, 'water', 3)">3. Чувства опасны, прячусь за маской тишины.</div>
+                <div class="option-card" data-type="water" data-pos="4" onclick="selectElement(this, 'water', 4)">4. Спокойный резонатор, без бурных драм.</div>
+            </div>
+            </div>
     </div>
 
-    <div class="nav">
-        <div class="nav-item active" id="btn-diary" onclick="show('diary')">📊 Дневник</div>
-        <div class="nav-item" id="btn-profile" onclick="show('profile')">👤 Профиль</div>
-    </div>
+    <div id="menu" class="page"><h2>Меню</h2><p>В разработке...</p></div>
+    <div id="diary" class="page"><h2>Дневник</h2><p>Интеграция с базой...</p></div>
+    <div id="care" class="page"><h2>Забота</h2><p>Таймлайн восстановления...</p></div>
+</div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+<nav class="tabs">
+    <button class="tab-btn active" onclick="showPage('profile', this)">👤<span>Профиль</span></button>
+    <button class="tab-btn" onclick="showPage('menu', this)">🍏<span>Меню</span></button>
+    <button class="tab-btn" onclick="showPage('diary', this)">📝<span>Дневник</span></button>
+    <button class="tab-btn" onclick="showPage('care', this)">❤️<span>Забота</span></button>
+</nav>
 
-        // ОБЯЗАТЕЛЬНО ПРОВЕРЬ ЭТУ ССЫЛКУ:
-        const API_URL = "https://depletion-kindling-diffusive.ngrok-free.dev";
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
 
-        function show(page) {
-            if (page === 'diary') {
-                document.getElementById('page-diary').classList.remove('hidden');
-                document.getElementById('page-profile').classList.add('hidden');
-                document.getElementById('btn-diary').classList.add('active');
-                document.getElementById('btn-profile').classList.remove('active');
-                loadStats();
-            } else {
-                document.getElementById('page-diary').classList.add('hidden');
-                document.getElementById('page-profile').classList.remove('hidden');
-                document.getElementById('btn-diary').classList.remove('active');
-                document.getElementById('btn-profile').classList.add('active');
-                loadProfile();
+    let selections = { fire: null, water: null, air: null, earth: null };
+
+    function showPage(pageId, btn) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function selectElement(el, type, pos) {
+        // Проверка занятости позиции
+        for (let t in selections) {
+            if (selections[t] === pos && t !== type) {
+                alert("Эта позиция уже занята другой стихией!");
+                return;
             }
         }
+        
+        // Сброс выбора в блоке
+        document.querySelectorAll(`[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        selections[type] = pos;
 
-        async function loadStats() {
-            const uid = tg.initDataUnsafe.user.id;
-            try {
-                const r = await fetch(`${API_URL}/api/stats/${uid}`);
-                const d = await r.json();
-                document.getElementById('carbs').innerText = d.net_carbs || 0;
-                document.getElementById('limit').innerText = d.limit || 20;
-                document.getElementById('day').innerText = "День: " + (d.day || 1);
-            } catch (e) { document.getElementById('day').innerText = "Ошибка связи"; }
-        }
+        // Блокировка в других блоках
+        updateUI();
+    }
 
-        async function loadProfile() {
-            const uid = tg.initDataUnsafe.user.id;
-            try {
-                const r = await fetch(`${API_URL}/api/profile_data/${uid}`);
-                if (r.ok) {
-                    const d = await r.json();
-                    if(d.age) document.getElementById('age').value = d.age;
-                    if(d.weight) document.getElementById('weight').value = d.weight;
-                    if(d.height) document.getElementById('height').value = d.height;
-                    if(d.health_summary) document.getElementById('health').innerText = d.health_summary;
-                }
-            } catch (e) { console.log("Профиль еще пуст"); }
-        }
+    function updateUI() {
+        const selectedPositions = Object.values(selections).filter(v => v !== null);
+        document.querySelectorAll('.option-card').forEach(card => {
+            const cardPos = parseInt(card.dataset.pos);
+            const cardType = card.dataset.type;
+            if (selectedPositions.includes(cardPos) && selections[cardType] !== cardPos) {
+                card.classList.add('disabled');
+            } else {
+                card.classList.remove('disabled');
+            }
+        });
+    }
 
-        async function saveData() {
-            const uid = tg.initDataUnsafe.user.id;
-            const data = {
-                "возраст": document.getElementById('age').value,
-                "вес": document.getElementById('weight').value,
-                "рост": document.getElementById('height').value,
-                "пол": "не указан"
-            };
+    async function uploadData() {
+        const userId = tg.initDataUnsafe.user.id;
+        const data = {
+            age: document.getElementById('age').value,
+            height: document.getElementById('height').value,
+            weight: document.getElementById('weight').value,
+            blood_pressure: document.getElementById('bp').value,
+            gender: document.getElementById('gender').value,
+            fire_pos: selections.fire,
+            water_pos: selections.water
+        };
 
-            try {
-                const r = await fetch(`${API_URL}/api/profile/${uid}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
-                });
-                if (r.ok) tg.showAlert("✅ Сохранено!");
-            } catch (e) { tg.showAlert("❌ Ошибка!"); }
-        }
+        const response = await fetch(`http://ТВОЙ_АЙПИ:8000/api/save_profile/${userId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) tg.close();
+    }
 
-        loadStats(); // Стартовая загрузка
-    </script>
+    function sendAction(type) {
+        // Закрываем приложение и отправляем команду боту в чат
+        tg.sendData(type);
+    }
+</script>
 </body>
 </html>
