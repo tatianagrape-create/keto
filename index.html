@@ -7,15 +7,16 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --bg: #fdfaf6; --fire: #f7dcdb; --water: #dbe4f7; --air: #f2f2f2; --earth: #e2f7db; --accent: #007aff; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px 20px 100px 20px; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px 20px 100px 20px; color: #333; }
+        h2, h3 { margin-top: 0; }
         .page { display: none; } .page.active { display: block; }
         .input-box { margin-bottom: 15px; }
         label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
         input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; background: #fff; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.2s; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .btn-main { background: var(--accent); color: white; }
         .btn-sec { background: #fff; border: 1px solid var(--accent); color: var(--accent); }
-        .btn-ready { background: #28a745; color: white; margin-top: 25px; display: none; }
+        .btn-ready { background: #28a745; color: white; margin-top: 25px; display: none; font-size: 18px; }
         .element-block { border-radius: 15px; padding: 15px; margin-top: 20px; }
         .card { background: rgba(255,255,255,0.7); padding: 12px; border-radius: 10px; margin: 8px 0; font-size: 13px; border: 2px solid transparent; }
         .card.selected { border-color: var(--accent); background: #fff; font-weight: bold; }
@@ -23,7 +24,7 @@
         .nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; display: flex; border-top: 1px solid #eee; padding: 10px 0; z-index: 1000; }
         .nav-item { flex: 1; text-align: center; font-size: 10px; color: #999; border: none; background: none; }
         .nav-item.active { color: var(--accent); font-weight: bold; }
-        #file-status { font-size: 12px; color: #28a745; text-align: center; margin-top: 5px; }
+        #status { font-size: 12px; color: #28a745; text-align: center; margin-top: 10px; min-height: 15px; }
     </style>
 </head>
 <body>
@@ -40,10 +41,10 @@
     
     <button class="btn btn-main" onclick="saveData(false)">Сохранить все</button>
     
-    <input type="file" id="file-input" style="display:none" onchange="uploadFile(this)">
-    <button class="btn btn-sec" onclick="triggerFile('labs')">📄 Внести анализы</button>
-    <button class="btn btn-sec" onclick="triggerFile('nails')">💅 Фото ногтей</button>
-    <div id="file-status"></div>
+    <input type="file" id="file-picker" style="display:none" onchange="performUpload(this)">
+    <button class="btn btn-sec" onclick="openPicker('labs')">📄 Внести анализы</button>
+    <button class="btn btn-sec" onclick="openPicker('nails')">💅 Фото ногтей</button>
+    <div id="status"></div>
 
     <div style="margin-top:40px; border-top: 1px solid #ddd; padding-top: 20px;">
         <h3>Тест на психотипаж</h3>
@@ -85,29 +86,35 @@
 <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
-    // ВАЖНО: Укажите актуальный IP вашего Mac
-    const API_BASE = "http://192.168.10.110:8000"; 
+    
+    // !!! ЗАМЕНИ ЭТОТ IP НА СВОЙ !!!
+    const API_URL = "http://192.168.10.110:8000"; 
 
     let res = { fire: null, water: null, air: null, earth: null };
-    let currentUploadType = '';
+    let activeType = '';
 
     function sel(type, pos, el) {
-        for (let t in res) { if (res[t] === pos && t !== type) { tg.showAlert("Занято!"); return; } }
+        for (let t in res) { if (res[t] === pos && t !== type) { tg.showAlert("Эта позиция уже занята!"); return; } }
         document.querySelectorAll(`[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
         el.classList.add('selected');
         res[type] = pos;
+        updateView();
+    }
+
+    function updateView() {
         const picked = Object.values(res).filter(v => v !== null);
         document.querySelectorAll('.card').forEach(c => {
-            const cPos = parseInt(c.dataset.pos);
-            if (picked.includes(cPos) && res[c.dataset.type] !== cPos) c.classList.add('disabled');
+            const p = parseInt(c.dataset.pos);
+            const t = c.dataset.type;
+            if (picked.includes(p) && res[t] !== p) c.classList.add('disabled');
             else c.classList.remove('disabled');
         });
         if (picked.length === 4) document.getElementById('ready-btn').style.display = 'block';
     }
 
-    async function saveData(shouldClose) {
-        const uid = tg.initDataUnsafe?.user?.id || 12345;
-        const body = {
+    async function saveData(isFinal) {
+        const uid = tg.initDataUnsafe?.user?.id || 999;
+        const payload = {
             age: document.getElementById('age').value,
             height: document.getElementById('height').value,
             weight: document.getElementById('weight').value,
@@ -115,27 +122,31 @@
             gender: document.getElementById('gender').value,
             fire_pos: res.fire, water_pos: res.water, air_pos: res.air, earth_pos: res.earth
         };
+
         try {
-            await fetch(`${API_BASE}/api/save_profile/${uid}`, {
+            const r = await fetch(`${API_URL}/api/save_profile/${uid}`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(body)
+                body: JSON.stringify(payload)
             });
-            if (shouldClose) tg.close(); else tg.showAlert("Данные сохранены!");
-        } catch (e) { tg.showAlert("Нет связи с API"); }
+            if (r.ok) {
+                if (isFinal) tg.close(); else tg.showAlert("Профиль сохранен!");
+            }
+        } catch (e) { tg.showAlert("Ошибка связи с Mac. Проверь IP."); }
     }
 
-    function triggerFile(type) { currentUploadType = type; document.getElementById('file-input').click(); }
+    function openPicker(type) { activeType = type; document.getElementById('file-picker').click(); }
 
-    async function uploadFile(input) {
+    async function performUpload(input) {
         if (!input.files[0]) return;
-        const uid = tg.initDataUnsafe?.user?.id || 12345;
-        const formData = new FormData();
-        formData.append('file', input.files[0]);
-        document.getElementById('file-status').innerText = "⏳ Загрузка...";
+        const uid = tg.initDataUnsafe?.user?.id || 999;
+        const form = new FormData();
+        form.append('file', input.files[0]);
+        
+        document.getElementById('status').innerText = "⏳ Загрузка...";
         try {
-            await fetch(`${API_BASE}/api/upload_photo/${uid}/${currentUploadType}`, { method: 'POST', body: formData });
-            document.getElementById('file-status').innerText = "✅ Файл отправлен на анализ";
-        } catch (e) { tg.showAlert("Ошибка загрузки"); }
+            const r = await fetch(`${API_URL}/api/upload_photo/${uid}/${activeType}`, { method: 'POST', body: form });
+            if (r.ok) document.getElementById('status').innerText = "✅ Файл успешно отправлен!";
+        } catch (e) { tg.showAlert("Ошибка загрузки файла."); }
     }
 
     function tab(id, b) {
