@@ -112,26 +112,38 @@
         if (picked.length === 4) document.getElementById('ready-btn').style.display = 'block';
     }
 
-    async function saveData(isFinal) {
-        const uid = tg.initDataUnsafe?.user?.id || 999;
+    async function saveData(closeApp) {
+        const uid = tg.initDataUnsafe?.user?.id || 777;
+        
+        // Вспомогательная функция: если поле пустое — шлем null, если нет — число
+        const num = (id) => {
+            const v = document.getElementById(id).value;
+            return v === "" ? null : Number(v);
+        };
+
         const payload = {
-            age: document.getElementById('age').value,
-            height: document.getElementById('height').value,
-            weight: document.getElementById('weight').value,
+            age: num('age'),
+            height: num('height'),
+            weight: num('weight'),
             blood_pressure: document.getElementById('bp').value,
             gender: document.getElementById('gender').value,
-            fire_pos: res.fire, water_pos: res.water, air_pos: res.air, earth_pos: res.earth
+            fire_pos: res.fire, 
+            water_pos: res.water, 
+            air_pos: res.air, 
+            earth_pos: res.earth
         };
 
         try {
             const r = await fetch(`${API_URL}/api/save_profile/${uid}`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
-            if (r.ok) {
-                if (isFinal) tg.close(); else tg.showAlert("Профиль сохранен!");
+            if (r.ok) { 
+                if (closeApp) tg.close(); 
+                else tg.showAlert("Профиль сохранен!"); 
             }
-        } catch (e) { tg.showAlert("Ошибка связи с Mac. Проверь IP."); }
+        } catch (e) { tg.showAlert("Ошибка связи с Mac."); }
     }
 
     function openPicker(type) { activeType = type; document.getElementById('file-picker').click(); }
