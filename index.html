@@ -1,196 +1,167 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Keto Cabinet</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root { --bg: #fdfaf6; --accent: #007aff; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
-        .page { display: none; } .active { display: block; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #fff; padding: 15px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .label { font-size: 11px; color: #999; text-transform: uppercase; }
-        .val { font-size: 16px; font-weight: bold; color: #000; display: block; margin-top: 4px; }
-        .input-box { margin-bottom: 12px; }
-        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; }
-        .btn-main { background: var(--accent); color: white; }
-        .btn-sec { background: #fff; border: 1px solid var(--accent); color: var(--accent); }
-        .card { background: rgba(0,0,0,0.03); padding: 12px; border-radius: 10px; margin: 8px 0; font-size: 13px; border: 2px solid transparent; }
-        .card.selected { border-color: var(--accent); background: #fff; font-weight: bold; }
-        .psy-res { background: #1a1a1a; color: #fff; padding: 15px; border-radius: 15px; margin-top: 15px; }
-        .psy-line { margin-bottom: 8px; font-size: 13px; border-left: 2px solid var(--accent); padding-left: 10px; }
-        .status-msg { background: #e2f7db; color: #28a745; padding: 12px; border-radius: 12px; font-size: 12px; text-align: center; margin-top: 10px; }
-    </style>
-</head>
-<body>
+let tg = window.Telegram.WebApp; tg.expand();
+const API_URL = "https://depletion-kindling-diffusive.ngrok-free.dev"; 
 
-<div id="p-profile" class="page active">
-    <div id="view-mode">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0">Профиль</h2>
-            <button class="btn-sec" style="width:auto; padding: 6px 15px;" onclick="toggleEdit()">Править</button>
-        </div>
+let test_res = { air: null, fire: null, water: null, earth: null };
+
+const TEXTS = {
+    air: ["1. Ведущий: Мир — система.", "2. Проводник: Мыслительный процесс.", "3. Хрупкий: Боязнь ошибки.", "4. Опора: Инструкции и правила."],
+    fire: ["1. Ведущий: Моя воля — закон.", "2. Проводник: Вдохновляю других.", "3. Хрупкий: Трудный выбор.", "4. Опора: Выбор делегирую."],
+    water: ["1. Ведущий: Эмоции — реальность.", "2. Проводник: Эмпатия и уют.", "3. Хрупкий: Скрытность.", "4. Опора: Спокойствие."],
+    earth: ["1. Ведущий: Здоровье тела.", "2. Проводник: Забота и быт.", "3. Хрупкий: Мнительность.", "4. Опора: Тело — инструмент."]
+};
+
+async function init() {
+    // Заполняем списки давления
+    const s = document.getElementById('in_bp_sys'), d = document.getElementById('in_bp_dia');
+    for(let i=80; i<=200; i+=10) s.innerHTML += `<option value="${i}">${i}</option>`;
+    for(let i=50; i<=120; i+=10) d.innerHTML += `<option value="${i}">${i}</option>`;
+    s.value = "120"; d.value = "80";
+
+    // Рендерим тест
+    const cont = document.getElementById('test-cont');
+    [{id:'air', n:'Воздух'}, {id:'fire', n:'Огонь'}, {id:'water', n:'Вода'}, {id:'earth', n:'Земля'}].forEach(el => {
+        let h = `<div style="background:rgba(0,0,0,0.03); padding:15px; border-radius:15px; margin-top:15px;"><strong>${el.n}</strong>`;
+        TEXTS[el.id].forEach((t, i) => { h += `<div class="card" data-type="${el.id}" data-pos="${i+1}" onclick="sel('${el.id}',${i+1},this)">${t}</div>`; });
+        cont.innerHTML += h + `</div>`;
+    });
+
+    // Загружаем данные из БД (с обходом защиты ngrok)
+    const r = await fetch(`${API_URL}/api/get_profile/${tg.initDataUnsafe?.user?.id || 777}`, {
+        headers: { "ngrok-skip-browser-warning": "true" }
+    });
+    const d_api = await r.json();
+    
+    if(d_api.status !== "new") {
+        if(d_api.age) document.getElementById('in_age').value = d_api.age;
+        if(d_api.height) document.getElementById('in_height').value = d_api.height;
+        if(d_api.weight) document.getElementById('in_weight').value = d_api.weight;
+        if(d_api.pulse) document.getElementById('in_pulse').value = d_api.pulse;
+        if(d_api.gender) document.getElementById('in_gender').value = d_api.gender;
         
-        <div class="grid">
-            <div><span class="label">Возраст</span><span class="val" id="v_age">—</span></div>
-            <div><span class="label">Пол</span><span class="val" id="v_gender">—</span></div>
-            <div><span class="label">Рост</span><span class="val" id="v_height">—</span></div>
-            <div><span class="label">Вес</span><span class="val" id="v_weight">—</span></div>
-            <div><span class="label">Давление</span><span class="val" id="v_bp">—</span></div>
-            <div><span class="label">Пульс</span><span class="val" id="v_pulse">—</span></div>
-        </div>
-
-        <div id="psy-display" class="psy-res" style="display:none">
-            <div style="font-size:10px; opacity:0.5; text-align:center; margin-bottom:10px;">ВАШ ПСИХОТИП</div>
-            <div id="psy-text"></div>
-        </div>
-
-        <div style="margin-top:20px;">
-            <div id="labs-box"><button class="btn btn-sec" onclick="pick('labs')">📄 Внести анализы</button></div>
-            <div id="nails-box"><button class="btn btn-sec" onclick="pick('nails')">💅 Фото ногтей</button></div>
-        </div>
-    </div>
-
-    <div id="edit-mode" style="display:none">
-        <h2>Настройка данных</h2>
-        <div class="input-box"><label>Возраст</label><input type="number" id="in_age"></div>
-        <div class="input-box"><label>Пол</label><select id="in_gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
-        <div class="input-box"><label>Рост (см)</label><input type="number" id="in_height"></div>
-        <div class="input-box"><label>Вес (кг)</label><input type="number" id="in_weight" step="0.1"></div>
-        <div class="input-box"><label>Пульс</label><input type="number" id="in_pulse"></div>
-        <div class="input-box"><label>Давление</label>
-            <div style="display:flex; gap:10px;"><select id="in_bp_sys"></select><span>/</span><select id="in_bp_dia"></select></div>
-        </div>
-        <button class="btn btn-main" onclick="saveData(false)">Сохранить</button>
-        <button class="btn-sec" onclick="toggleEdit()">Отмена</button>
-    </div>
-
-    <div id="test-sec" style="margin-top:40px; border-top: 1px dotted #ccc; padding-top:20px;">
-        <h3>Тест на стихии</h3>
-        <div id="test-cont"></div>
-        <button id="ready-btn" class="btn btn-main" style="display:none; background:#28a745" onclick="saveData(true)">ГОТОВО</button>
-    </div>
-</div>
-
-<input type="file" id="file-picker" style="display:none" onchange="uploadFile(this)">
-
-<script>
-    let tg = window.Telegram.WebApp; tg.expand();
-    const API_URL = "https://depletion-kindling-diffusive.ngrok-free.dev"; 
-
-    let test_res = { air: null, fire: null, water: null, earth: null };
-
-    const TEXTS = {
-        air: ["1. Ведущий: Мир — система.", "2. Проводник: Мыслительный процесс.", "3. Хрупкий: Боязнь ошибки.", "4. Опора: Инструкции и правила."],
-        fire: ["1. Ведущий: Моя воля — закон.", "2. Проводник: Вдохновляю других.", "3. Хрупкий: Трудный выбор.", "4. Опора: Выбор делегирую."],
-        water: ["1. Ведущий: Эмоции — реальность.", "2. Проводник: Эмпатия и уют.", "3. Хрупкий: Скрытность.", "4. Опора: Спокойствие."],
-        earth: ["1. Ведущий: Здоровье тела.", "2. Проводник: Забота и быт.", "3. Хрупкий: Мнительность.", "4. Опора: Тело — инструмент."]
-    };
-
-    async function init() {
-        // Заполняем списки давления
-        const s = document.getElementById('in_bp_sys'), d = document.getElementById('in_bp_dia');
-        for(let i=80; i<=200; i+=10) s.innerHTML += `<option value="${i}">${i}</option>`;
-        for(let i=50; i<=120; i+=10) d.innerHTML += `<option value="${i}">${i}</option>`;
-        s.value = "120"; d.value = "80"; // Жестко ставим по умолчанию
-
-        // Рендерим тест
-        const cont = document.getElementById('test-cont');
-        [{id:'air', n:'Воздух'}, {id:'fire', n:'Огонь'}, {id:'water', n:'Вода'}, {id:'earth', n:'Земля'}].forEach(el => {
-            let h = `<div style="background:rgba(0,0,0,0.03); padding:15px; border-radius:15px; margin-top:15px;"><strong>${el.n}</strong>`;
-            TEXTS[el.id].forEach((t, i) => { h += `<div class="card" data-type="${el.id}" data-pos="${i+1}" onclick="sel('${el.id}',${i+1},this)">${t}</div>`; });
-            cont.innerHTML += h + `</div>`;
-        });
-
-        // Загружаем данные из БД
-        const r = await fetch(`${API_URL}/api/get_profile/${tg.initDataUnsafe?.user?.id || 777}`);
-        const d_api = await r.json();
-        
-        if(d_api.status !== "new") {
-            // Восстанавливаем инпуты (чтобы при сохранении не отправлялась пустота)
-            if(d_api.age) document.getElementById('in_age').value = d_api.age;
-            if(d_api.height) document.getElementById('in_height').value = d_api.height;
-            if(d_api.weight) document.getElementById('in_weight').value = d_api.weight;
-            if(d_api.pulse) document.getElementById('in_pulse').value = d_api.pulse;
-            if(d_api.gender) document.getElementById('in_gender').value = d_api.gender;
-            
-            if(d_api.blood_pressure) {
-                const b = d_api.blood_pressure.split('/');
+        if(d_api.blood_pressure) {
+            const b = d_api.blood_pressure.split('/');
+            if(b.length === 2) {
                 document.getElementById('in_bp_sys').value = b[0];
                 document.getElementById('in_bp_dia').value = b[1];
             }
+        }
 
-            // Восстанавливаем тест в памяти!
-            test_res.air = d_api.air_pos || null;
-            test_res.fire = d_api.fire_pos || null;
-            test_res.water = d_api.water_pos || null;
-            test_res.earth = d_api.earth_pos || null;
+        test_res.air = d_api.air_pos || null;
+        test_res.fire = d_api.fire_pos || null;
+        test_res.water = d_api.water_pos || null;
+        test_res.earth = d_api.earth_pos || null;
 
-            // Отрисовываем тексты на экране
-            document.getElementById('v_age').innerText = d_api.age || '—';
-            document.getElementById('v_height').innerText = d_api.height ? d_api.height + ' см' : '—';
-            document.getElementById('v_weight').innerText = d_api.weight ? d_api.weight + ' кг' : '—';
-            document.getElementById('v_pulse').innerText = d_api.pulse ? d_api.pulse + ' уд/мин' : '—';
-            document.getElementById('v_gender').innerText = d_api.gender === 'male' ? 'М' : 'Ж';
-            document.getElementById('v_bp').innerText = d_api.blood_pressure || '—';
+        document.getElementById('v_age').innerText = d_api.age || '—';
+        document.getElementById('v_height').innerText = d_api.height ? d_api.height + ' см' : '—';
+        document.getElementById('v_weight').innerText = d_api.weight ? d_api.weight + ' кг' : '—';
+        document.getElementById('v_pulse').innerText = d_api.pulse ? d_api.pulse + ' уд/мин' : '—';
+        document.getElementById('v_gender').innerText = d_api.gender === 'male' ? 'М' : (d_api.gender === 'female' ? 'Ж' : '—');
+        document.getElementById('v_bp').innerText = d_api.blood_pressure || '—';
 
-            if(d_api.air_pos) {
-                document.getElementById('psy-text').innerHTML = `
-                    <div class="psy-line">💨 ${TEXTS.air[d_api.air_pos-1]}</div>
-                    <div class="psy-line">🔥 ${TEXTS.fire[d_api.fire_pos-1]}</div>
-                    <div class="psy-line">💧 ${TEXTS.water[d_api.water_pos-1]}</div>
-                    <div class="psy-line">🌍 ${TEXTS.earth[d_api.earth_pos-1]}</div>`;
-                document.getElementById('psy-display').style.display = 'block';
-                document.getElementById('test-sec').style.display = 'none';
-            }
+        if(d_api.air_pos) {
+            document.getElementById('psy-text').innerHTML = `
+                <div class="psy-line">💨 ${TEXTS.air[d_api.air_pos-1]}</div>
+                <div class="psy-line">🔥 ${TEXTS.fire[d_api.fire_pos-1]}</div>
+                <div class="psy-line">💧 ${TEXTS.water[d_api.water_pos-1]}</div>
+                <div class="psy-line">🌍 ${TEXTS.earth[d_api.earth_pos-1]}</div>`;
+            document.getElementById('psy-display').style.display = 'block';
+            document.getElementById('test-sec').style.display = 'none';
+        } else {
+            // Если тест еще не пройден, обновляем состояния карточек
+            updateCardStates();
         }
     }
+}
 
-    function sel(t, p, el) {
-        for(let k in test_res) if(test_res[k] === p && k !== t) { tg.showAlert("Занято!"); return; }
-        document.querySelectorAll(`[data-type="${t}"]`).forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected'); 
-        test_res[t] = p;
-        if(Object.values(test_res).every(v => v !== null)) document.getElementById('ready-btn').style.display = 'block';
-    }
-
-    async function saveData(isTest) {
-        // ВСЕГДА собираем все данные с экрана и из памяти
-        const payload = {
-            age: document.getElementById('in_age').value || null,
-            height: document.getElementById('in_height').value || null,
-            weight: document.getElementById('in_weight').value || null,
-            pulse: document.getElementById('in_pulse').value || null,
-            gender: document.getElementById('in_gender').value,
-            blood_pressure: document.getElementById('in_bp_sys').value + '/' + document.getElementById('in_bp_dia').value,
-            air_pos: test_res.air,
-            fire_pos: test_res.fire,
-            water_pos: test_res.water,
-            earth_pos: test_res.earth
-        };
-
-        await fetch(`${API_URL}/api/save_profile/${tg.initDataUnsafe?.user?.id || 777}`, { 
-            method:'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) 
-        });
+function updateCardStates() {
+    // Перебираем все карточки и выключаем те, чей номер уже занят другой стихией
+    document.querySelectorAll('.card').forEach(card => {
+        const cardType = card.getAttribute('data-type');
+        const cardPos = parseInt(card.getAttribute('data-pos'));
         
-        if(isTest) tg.close(); else location.reload();
-    }
+        let isUsedByOther = false;
+        for (let k in test_res) {
+            if (k !== cardType && test_res[k] === cardPos) {
+                isUsedByOther = true;
+                break;
+            }
+        }
+        
+        if (isUsedByOther) {
+            card.classList.add('disabled');
+        } else {
+            card.classList.remove('disabled');
+        }
+    });
+}
 
-    function toggleEdit() {
-        const v = document.getElementById('view-mode'), e = document.getElementById('edit-mode');
-        v.style.display = v.style.display==='none'?'block':'none'; e.style.display = e.style.display==='none'?'block':'none';
-    }
+function sel(t, p, el) {
+    if (el.classList.contains('disabled')) return; // Доп. защита от клика по заблокированному
 
-    let upT = '';
-    function pick(t) { upT = t; document.getElementById('file-picker').click(); }
-    async function uploadFile(input) {
-        if (!input.files[0]) return;
-        const f = new FormData(); f.append('file', input.files[0]);
-        await fetch(`${API_URL}/api/upload_photo/${tg.initDataUnsafe?.user?.id || 777}/${upT}`, { method:'POST', body: f });
-        document.getElementById(upT+'-box').innerHTML = `<div class="status-msg">✅ Загружено. <span onclick="pick('${upT}')" style="text-decoration:underline; cursor:pointer">Еще</span></div>`;
+    // Снимаем выделение в текущей стихии
+    document.querySelectorAll(`[data-type="${t}"]`).forEach(c => c.classList.remove('selected'));
+    
+    // Ставим выделение и сохраняем
+    el.classList.add('selected'); 
+    test_res[t] = p;
+    
+    // Блокируем выбранную позицию (цифру) для остальных стихий
+    updateCardStates();
+
+    // Показываем кнопку готовности, если выбраны все 4 стихии
+    if(Object.values(test_res).every(v => v !== null)) {
+        document.getElementById('ready-btn').style.display = 'block';
     }
+}
+
+async function saveData(isTest) {
+    const payload = {
+        age: document.getElementById('in_age').value || null,
+        height: document.getElementById('in_height').value || null,
+        weight: document.getElementById('in_weight').value || null,
+        pulse: document.getElementById('in_pulse').value || null,
+        gender: document.getElementById('in_gender').value,
+        blood_pressure: document.getElementById('in_bp_sys').value + '/' + document.getElementById('in_bp_dia').value,
+        air_pos: test_res.air,
+        fire_pos: test_res.fire,
+        water_pos: test_res.water,
+        earth_pos: test_res.earth
+    };
+
+    await fetch(`${API_URL}/api/save_profile/${tg.initDataUnsafe?.user?.id || 777}`, { 
+        method:'POST', 
+        headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true' // Обход блокировки ngrok
+        }, 
+        body: JSON.stringify(payload) 
+    });
+    
+    if(isTest) tg.close(); else location.reload();
+}
+
+function toggleEdit() {
+    const v = document.getElementById('view-mode'), e = document.getElementById('edit-mode');
+    v.style.display = v.style.display==='none'?'block':'none'; e.style.display = e.style.display==='none'?'block':'none';
+}
+
+let upT = '';
+function pick(t) { upT = t; document.getElementById('file-picker').click(); }
+
+async function uploadFile(input) {
+    if (!input.files[0]) return;
+    const f = new FormData(); f.append('file', input.files[0]);
+    
+    await fetch(`${API_URL}/api/upload_photo/${tg.initDataUnsafe?.user?.id || 777}/${upT}`, { 
+        method:'POST', 
+        headers: { "ngrok-skip-browser-warning": "true" }, // Обход блокировки ngrok
+        body: f 
+    });
+    
+    document.getElementById(upT+'-box').innerHTML = `<div class="status-msg">✅ Загружено. <span onclick="pick('${upT}')" style="text-decoration:underline; cursor:pointer">Еще</span></div>`;
+}
+
+init();
 
     init();
 </script>
