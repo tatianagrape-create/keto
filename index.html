@@ -3,27 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Keto Way Profile</title>
+    <title>Keto Pro</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg: #fdfaf6; --accent: #007aff; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
+        :root { --bg: #fdfaf6; --accent: #007aff; --card: #ffffff; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
         .page { display: none; } .active { display: block; }
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #fff; padding: 15px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .data-item { font-size: 10px; color: #999; text-transform: uppercase; }
-        .data-value { font-size: 15px; font-weight: bold; color: #000; display: block; margin-top: 2px; }
-        .input-box { margin-bottom: 12px; }
-        label { display: block; font-size: 11px; color: #999; margin-bottom: 4px; }
-        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; background: #fff; box-sizing: border-box; }
+        
+        /* Dashboard */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .item { background: var(--card); padding: 12px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .label { font-size: 10px; color: #999; text-transform: uppercase; }
+        .val { font-size: 16px; font-weight: bold; display: block; margin-top: 4px; }
+        
+        /* UI Elements */
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; margin-top: 5px; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .btn-main { background: var(--accent); color: white; }
         .btn-sec { background: #fff; border: 1px solid var(--accent); color: var(--accent); }
-        .psychotype-res { background: #1a1a1a; color: #fff; padding: 15px; border-radius: 15px; margin-top: 15px; }
-        .psy-line { margin-bottom: 8px; font-size: 13px; line-height: 1.4; padding-left: 10px; border-left: 2px solid var(--accent); }
-        .card { background: rgba(0,0,0,0.03); padding: 12px; border-radius: 10px; margin: 8px 0; font-size: 12px; border: 2px solid transparent; }
+        
+        /* Psychotype */
+        .psy-res { background: #1a1a1a; color: #fff; padding: 15px; border-radius: 15px; margin-top: 15px; }
+        .psy-line { margin-bottom: 8px; font-size: 12px; border-left: 2px solid var(--accent); padding-left: 10px; opacity: 0.9; }
+        
+        .card { background: rgba(0,0,0,0.03); padding: 10px; border-radius: 10px; margin: 8px 0; font-size: 12px; border: 2px solid transparent; }
         .card.selected { border-color: var(--accent); background: #fff; font-weight: bold; }
-        .card.disabled { opacity: 0.3; pointer-events: none; }
-        .status-ok { background: #e2f7db; color: #28a745; padding: 10px; border-radius: 10px; font-size: 12px; text-align: center; margin-top: 10px; border: 1px solid #28a745; }
+        .status-msg { background: #e2f7db; color: #28a745; padding: 12px; border-radius: 10px; font-size: 12px; text-align: center; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -32,170 +37,165 @@
     <div id="view-mode">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h2 style="margin:0">Профиль</h2>
-            <button class="btn-sec" style="width:auto; padding: 6px 12px; font-size:12px;" onclick="toggleEdit()">ПРАВИТЬ</button>
-        </div>
-        <div class="data-grid">
-            <div class="data-item">Возраст<span class="data-value" id="v-age">—</span></div>
-            <div class="data-item">Пол<span class="data-value" id="v-gender">—</span></div>
-            <div class="data-item">Рост<span class="data-value" id="v-height">—</span></div>
-            <div class="data-item">Вес<span class="data-value" id="v-weight">—</span></div>
-            <div class="data-item">Давление<span class="data-value" id="v-bp">—</span></div>
-            <div class="data-item">Пульс<span class="data-value" id="v-pulse">—</span></div>
+            <button class="btn-sec" style="width:auto; padding: 6px 12px; font-size:12px;" onclick="toggleEdit()">Править</button>
         </div>
         
-        <div id="psychotype-display" class="psychotype-res" style="display:none">
-            <div style="font-size:10px; opacity:0.6; margin-bottom:10px; text-align:center;">ВАШ ПСИХОТИПАЖ</div>
-            <div id="v-psycho-list"></div>
+        <div class="grid">
+            <div class="item"><span class="label">Возраст</span><span class="val" id="d-age">—</span></div>
+            <div class="item"><span class="label">Пол</span><span class="val" id="d-gender">—</span></div>
+            <div class="item"><span class="label">Рост</span><span class="val" id="d-height">—</span></div>
+            <div class="item"><span class="label">Вес</span><span class="val" id="d-weight">—</span></div>
+            <div class="item"><span class="label">Давление</span><span class="val" id="d-bp">—</span></div>
+            <div class="item"><span class="label">Пульс</span><span class="val" id="d-pulse">—</span></div>
+        </div>
+
+        <div id="psy-display" class="psy-res" style="display:none">
+            <div style="font-size:10px; opacity:0.5; text-align:center; margin-bottom:10px;">ВАШ ПСИХОТИП</div>
+            <div id="psy-text"></div>
         </div>
 
         <div style="margin-top:20px;">
-            <div id="labs-box"><button class="btn btn-sec" onclick="openPicker('labs')">📄 АНАЛИЗЫ</button></div>
-            <div id="nails-box"><button class="btn btn-sec" onclick="openPicker('nails')">💅 ФОТО НОГТЕЙ</button></div>
+            <div id="labs-box"><button class="btn btn-sec" onclick="pick('labs')">📄 Внести анализы</button></div>
+            <div id="nails-box"><button class="btn btn-sec" onclick="pick('nails')">💅 Фото ногтей</button></div>
         </div>
     </div>
 
     <div id="edit-mode" style="display:none">
-        <h3>Личные данные</h3>
-        <div class="input-box"><label>Возраст</label><input type="number" id="age"></div>
-        <div class="input-box"><label>Пол</label><select id="gender"><option value="male">Мужской</option><option value="female">Женский</option></select></div>
-        <div class="input-box"><label>Рост (см)</label><input type="number" id="height"></div>
-        <div class="input-box"><label>Вес (кг)</label><input type="number" id="weight" step="0.1"></div>
-        <div class="input-box"><label>Пульс</label><input type="number" id="pulse"></div>
-        <div class="input-box"><label>Давление</label>
-            <div style="display:flex; gap:10px;"><select id="bp_sys"></select><span>/</span><select id="bp_dia"></select></div>
+        <h3>Настройка данных</h3>
+        <input type="number" id="f-age" placeholder="Возраст">
+        <select id="f-gender"><option value="male">Мужской</option><option value="female">Женский</option></select>
+        <input type="number" id="f-height" placeholder="Рост (см)">
+        <input type="number" id="f-weight" step="0.1" placeholder="Вес (кг)">
+        <input type="number" id="f-pulse" placeholder="Пульс">
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <select id="f-bp-s"></select><span>/</span><select id="f-bp-d"></select>
         </div>
-        <button class="btn btn-main" onclick="save(false)">СОХРАНИТЬ</button>
-        <button class="btn-sec" onclick="toggleEdit()">ОТМЕНА</button>
+        <button class="btn btn-main" onclick="push(false)">Сохранить</button>
+        <button class="btn-sec" onclick="toggleEdit()">Отмена</button>
     </div>
 
-    <div id="test-section" style="margin-top:40px; border-top: 1px dotted #ccc; padding-top: 20px;">
-        <h3>Тест на психотипаж</h3>
-        <div id="test-container"></div>
-        <button id="ready-btn" class="btn btn-main" style="display:none; background:#28a745;" onclick="save(true)">ГОТОВО</button>
+    <div id="test-sec" style="margin-top:30px; border-top: 1px solid #eee; padding-top:20px;">
+        <h3>Тест на стихии</h3>
+        <div id="test-cont"></div>
+        <button id="ready-btn" class="btn btn-main" style="display:none; background:#28a745" onclick="push(true)">ГОТОВО</button>
     </div>
 </div>
 
 <input type="file" id="file-picker" style="display:none" onchange="upload(this)">
 
 <script>
-    let tg = window.Telegram.WebApp;
-    tg.expand();
+    let tg = window.Telegram.WebApp; tg.expand();
     const API_URL = "https://depletion-kindling-diffusive.ngrok-free.dev"; 
 
-    const psy_data = {
-        air: ["1. Ведущий: Мир — система. Принципы непоколебимы.", "2. Проводник: Обожаю процесс дискуссии.", "3. Хрупкий: Боюсь ошибиться.", "4. Опора: Верю четким инструкциям."],
-        fire: ["1. Ведущий: Я решаю. Моя воля — закон.", "2. Проводник: Добиваюсь целей мягко.", "3. Хрупкий: Мучительно принимаю решения.", "4. Опора: Делегирую право выбора."],
-        water: ["1. Ведущий: Мое настроение — реальность.", "2. Проводник: Мастер сопереживания.", "3. Хрупкий: Прячусь за маской.", "4. Опора: Спокойный резонатор."],
-        earth: ["1. Ведущий: Комфорт на первом месте.", "2. Проводник: Мастер уюта и еды.", "3. Хрупкий: Мнительность к телу.", "4. Опора: Быт перекладываю на других."]
+    // ЕДИНЫЙ ИСТОЧНИК ИСТИНЫ
+    let STATE = { age:'', gender:'male', height:'', weight:'', pulse:'', bp:'120/80', air:null, fire:null, water:null, earth:null };
+
+    const TEXTS = {
+        air: ["1. Ведущий: Мир — система.", "2. Проводник: Мыслительный процесс.", "3. Хрупкий: Боязнь ошибки.", "4. Опора: Инструкции и правила."],
+        fire: ["1. Ведущий: Моя воля — закон.", "2. Проводник: Вдохновляю других.", "3. Хрупкий: Трудный выбор.", "4. Опора: Выбор делегирую."],
+        water: ["1. Ведущий: Эмоции — реальность.", "2. Проводник: Эмпатия и уют.", "3. Хрупкий: Скрытность.", "4. Опора: Спокойствие."],
+        earth: ["1. Ведущий: Здоровье тела.", "2. Проводник: Забота и быт.", "3. Хрупкий: Мнительность.", "4. Опора: Тело — инструмент."]
     };
 
-    let res = { air: null, fire: null, water: null, earth: null };
-
-    function fillBP() {
-        const s = document.getElementById('bp_sys'), d = document.getElementById('bp_dia');
+    async function init() {
+        // Заполняем селекторы давления
+        const s = document.getElementById('f-bp-s'), d = document.getElementById('f-bp-d');
         for(let i=80; i<=200; i+=10) s.innerHTML += `<option value="${i}">${i}</option>`;
         for(let i=50; i<=120; i+=10) d.innerHTML += `<option value="${i}">${i}</option>`;
-        s.value = 120; d.value = 80;
-    }
 
-    function renderTest() {
-        const container = document.getElementById('test-container');
-        const config = [{id:'air', n:'Воздух (A)', c:'#f2f2f2'}, {id:'fire', n:'Огонь (F)', c:'#f7dcdb'}, {id:'water', n:'Вода (W)', c:'#dbe4f7'}, {id:'earth', n:'Земля (E)', c:'#e2f7db'}];
+        // Рендерим тест
+        const cont = document.getElementById('test-cont');
+        const config = [{id:'air', n:'Воздух'}, {id:'fire', n:'Огонь'}, {id:'water', n:'Вода'}, {id:'earth', n:'Земля'}];
         config.forEach(el => {
-            let h = `<div style="background:${el.c}; padding:15px; border-radius:15px; margin-top:15px;"><strong>Стихия ${el.n}</strong>`;
-            psy_data[el.id].forEach((t, i) => {
-                h += `<div class="card" data-type="${el.id}" data-pos="${i+1}" onclick="sel('${el.id}', ${i+1}, this)">${t}</div>`;
-            });
-            container.innerHTML += h + `</div>`;
+            let h = `<div style="margin-top:10px;"><strong>${el.n}</strong>`;
+            TEXTS[el.id].forEach((t, i) => { h += `<div class="card" data-type="${el.id}" data-pos="${i+1}" onclick="sel('${el.id}',${i+1},this)">${t}</div>`; });
+            cont.innerHTML += h + `</div>`;
         });
+
+        // Грузим данные из БД
+        const r = await fetch(`${API_URL}/api/get_profile/${tg.initDataUnsafe?.user?.id || 777}`);
+        const data = await r.json();
+        if(data.status !== "new") {
+            STATE = { ...STATE, ...data, air:data.air_pos, fire:data.fire_pos, water:data.water_pos, earth:data.earth_pos };
+            renderUI();
+        }
     }
 
-    async function init() {
-        fillBP(); renderTest();
-        const uid = tg.initDataUnsafe?.user?.id || 777;
-        try {
-            const r = await fetch(`${API_URL}/api/get_profile/${uid}`);
-            const d = await r.json();
-            if (d.status !== "new") {
-                // Заполняем и просмотр, и инпуты!
-                if (d.age) { document.getElementById('v-age').innerText = document.getElementById('age').value = d.age; }
-                if (d.height) { document.getElementById('v-height').innerText = d.height + ' см'; document.getElementById('height').value = d.height; }
-                if (d.weight) { document.getElementById('v-weight').innerText = d.weight + ' кг'; document.getElementById('weight').value = d.weight; }
-                if (d.pulse) { document.getElementById('v-pulse').innerText = d.pulse + ' уд/мин'; document.getElementById('pulse').value = d.pulse; }
-                if (d.gender) { document.getElementById('v-gender').innerText = d.gender === 'male' ? 'М' : 'Ж'; document.getElementById('gender').value = d.gender; }
-                
-                if(d.blood_pressure) {
-                    document.getElementById('v-bp').innerText = d.blood_pressure;
-                    const b = d.blood_pressure.split('/');
-                    document.getElementById('bp_sys').value = b[0]; document.getElementById('bp_dia').value = b[1];
-                }
+    function renderUI() {
+        // Текст в Dashboard
+        document.getElementById('d-age').innerText = STATE.age || '—';
+        document.getElementById('d-height').innerText = STATE.height ? STATE.height+' см' : '—';
+        document.getElementById('d-weight').innerText = STATE.weight ? STATE.weight+' кг' : '—';
+        document.getElementById('d-pulse').innerText = STATE.pulse ? STATE.pulse+' уд/мин' : '—';
+        document.getElementById('d-gender').innerText = STATE.gender === 'male' ? 'М' : 'Ж';
+        document.getElementById('d-bp').innerText = STATE.blood_pressure || '—';
+        
+        // Значения в инпутах
+        document.getElementById('f-age').value = STATE.age || '';
+        document.getElementById('f-height').value = STATE.height || '';
+        document.getElementById('f-weight').value = STATE.weight || '';
+        document.getElementById('f-pulse').value = STATE.pulse || '';
+        document.getElementById('f-gender').value = STATE.gender || 'male';
 
-                // Отображаем текстовый результат теста
-                if (d.air) {
-                    res = { air: d.air, fire: d.fire, water: d.water, earth: d.earth };
-                    document.getElementById('v-psycho-list').innerHTML = `
-                        <div class="psy-line">💨 ${psy_data.air[d.air-1]}</div>
-                        <div class="psy-line">🔥 ${psy_data.fire[d.fire-1]}</div>
-                        <div class="psy-line">💧 ${psy_data.water[d.water-1]}</div>
-                        <div class="psy-line">🌍 ${psy_data.earth[d.earth-1]}</div>
-                    `;
-                    document.getElementById('psychotype-display').style.display = 'block';
-                    document.getElementById('test-section').style.display = 'none';
-                }
-            }
-        } catch(e) {}
-    }
-    init();
-
-    function sel(type, pos, el) {
-        for (let t in res) { if (res[t] === pos && t !== type) { tg.showAlert("Занято!"); return; } }
-        document.querySelectorAll(`[data-type="${type}"]`).forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected');
-        res[type] = pos;
-        const picked = Object.values(res).filter(v => v !== null);
-        if (picked.length === 4) document.getElementById('ready-btn').style.display = 'block';
+        // Текст психотипа
+        if(STATE.air) {
+            document.getElementById('psy-text').innerHTML = `
+                <div class="psy-line">💨 ${TEXTS.air[STATE.air-1]}</div>
+                <div class="psy-line">🔥 ${TEXTS.fire[STATE.fire-1]}</div>
+                <div class="psy-line">💧 ${TEXTS.water[STATE.water-1]}</div>
+                <div class="psy-line">🌍 ${TEXTS.earth[STATE.earth-1]}</div>`;
+            document.getElementById('psy-display').style.display = 'block';
+            document.getElementById('test-sec').style.display = 'none';
+        }
     }
 
-    async function save(isTest) {
-        const uid = tg.initDataUnsafe?.user?.id || 777;
-        // Собираем данные ТОЛЬКО если в инпутах что-то есть, чтобы не слать пустые строки
+    function sel(t, p, el) {
+        for(let k in STATE) if(['air','fire','water','earth'].includes(k) && STATE[k] === p && k !== t) { tg.showAlert("Занято!"); return; }
+        document.querySelectorAll(`[data-type="${t}"]`).forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected'); 
+        STATE[t] = p;
+        if(STATE.air && STATE.fire && STATE.water && STATE.earth) document.getElementById('ready-btn').style.display = 'block';
+    }
+
+    async function push(isTest) {
+        // Собираем актуальные данные из формы в STATE перед отправкой
+        if(!isTest) {
+            STATE.age = document.getElementById('f-age').value;
+            STATE.height = document.getElementById('f-height').value;
+            STATE.weight = document.getElementById('f-weight').value;
+            STATE.pulse = document.getElementById('f-pulse').value;
+            STATE.gender = document.getElementById('f-gender').value;
+            STATE.blood_pressure = document.getElementById('f-bp-s').value + '/' + document.getElementById('f-bp-d').value;
+        }
+
         const payload = {
-            air_pos: res.air, fire_pos: res.fire, water_pos: res.water, earth_pos: res.earth,
-            age: document.getElementById('age').value || null,
-            height: document.getElementById('height').value || null,
-            weight: document.getElementById('weight').value || null,
-            pulse: document.getElementById('pulse').value || null,
-            gender: document.getElementById('gender').value,
-            blood_pressure: document.getElementById('bp_sys').value + '/' + document.getElementById('bp_dia').value
+            age: STATE.age, height: STATE.height, weight: STATE.weight, pulse: STATE.pulse,
+            gender: STATE.gender, blood_pressure: STATE.blood_pressure,
+            air_pos: STATE.air, fire_pos: STATE.fire, water_pos: STATE.water, earth_pos: STATE.earth
         };
 
-        try {
-            const response = await fetch(`${API_URL}/api/save_profile/${uid}`, { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify(payload) 
-            });
-            if (response.ok) {
-                if (isTest) tg.close(); else location.reload();
-            }
-        } catch (e) { tg.showAlert("Ошибка связи."); }
+        await fetch(`${API_URL}/api/save_profile/${tg.initDataUnsafe?.user?.id || 777}`, { 
+            method:'POST', 
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload) 
+        });
+        if(isTest) tg.close(); else location.reload();
     }
 
     function toggleEdit() {
         const v = document.getElementById('view-mode'), e = document.getElementById('edit-mode');
-        v.style.display = (v.style.display==='none')?'block':'none';
-        e.style.display = (e.style.display==='none')?'block':'none';
+        v.style.display = v.style.display==='none'?'block':'none'; e.style.display = e.style.display==='none'?'block':'none';
     }
 
     let upT = '';
-    function openPicker(t) { upT = t; document.getElementById('file-picker').click(); }
+    function pick(t) { upT = t; document.getElementById('file-picker').click(); }
     async function upload(input) {
-        if (!input.files[0]) return;
-        const form = new FormData(); form.append('file', input.files[0]);
-        await fetch(`${API_URL}/api/upload_photo/${tg.initDataUnsafe?.user?.id || 777}/${upT}`, { method: 'POST', body: form });
-        const box = document.getElementById(upT === 'labs' ? 'labs-box' : 'nails-box');
-        box.innerHTML = `<div class="status-ok">✅ Учтено. <span onclick="openPicker('${upT}')" style="text-decoration:underline; cursor:pointer;">Еще</span></div>`;
+        const f = new FormData(); f.append('file', input.files[0]);
+        await fetch(`${API_URL}/api/upload_photo/${tg.initDataUnsafe?.user?.id || 777}/${upT}`, { method:'POST', body: f });
+        document.getElementById(upT+'-box').innerHTML = `<div class="status-msg">✅ Учтено в программе. <span onclick="pick('${upT}')" style="text-decoration:underline; cursor:pointer">Добавить</span></div>`;
     }
+
+    init();
 </script>
 </body>
 </html>
