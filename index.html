@@ -7,23 +7,26 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --bg: #fdfaf6; --accent: #007aff; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; padding-bottom: 80px; color: #333; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; padding-bottom: 90px; color: #333; }
         
+        /* Анимация и страницы */
         .page { display: none; } 
         .page.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+        /* Элементы профиля */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #fff; padding: 15px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .label { font-size: 11px; color: #999; text-transform: uppercase; }
         .val { font-size: 16px; font-weight: bold; color: #000; display: block; margin-top: 4px; }
         .input-box { margin-bottom: 12px; }
-        input[type="number"], input[type="text"], select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; background: #fff;}
+        input[type="number"], input[type="text"], select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; background: #fff; font-family: inherit; }
+        textarea { resize: none; min-height: 60px; }
         
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; }
         .btn-main { background: var(--accent); color: white; }
         .btn-sec { background: #fff; border: 1px solid var(--accent); color: var(--accent); }
-        .btn-small { padding: 8px; font-size: 12px; margin-top: 5px; }
-
+        
+        /* Карточки теста */
         .card { background: rgba(0,0,0,0.03); padding: 12px; border-radius: 10px; margin: 8px 0; font-size: 13px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s;}
         .card.selected { border-color: var(--accent); background: #fff; font-weight: bold; }
         .card.disabled { opacity: 0.3; pointer-events: none; background: #eaeaea; }
@@ -32,28 +35,17 @@
         .psy-line { margin-bottom: 8px; font-size: 13px; border-left: 2px solid var(--accent); padding-left: 10px; }
         .status-msg { background: #e2f7db; color: #28a745; padding: 12px; border-radius: 12px; font-size: 12px; text-align: center; margin-top: 10px; }
 
-        /* Стили навигационного меню */
-        .nav-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: #fff; border-top: 1px solid #ddd;
-            display: flex; justify-content: space-around;
-            padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px);
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            z-index: 1000;
-        }
-        .nav-item { text-align: center; font-size: 12px; color: #999; cursor: pointer; flex: 1; user-select: none; }
+        /* Навигация */
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #ddd; display: flex; justify-content: space-around; padding: 10px 0; padding-bottom: env(safe-area-inset-bottom, 10px); box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 1000; }
+        .nav-item { text-align: center; font-size: 11px; color: #999; cursor: pointer; flex: 1; user-select: none; }
         .nav-item.active { color: var(--accent); font-weight: bold; }
         .nav-icon { font-size: 22px; display: block; margin-bottom: 4px; }
 
-        /* Стили для Дневника */
-        .diary-date-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .date-picker { border: none; background: #fff; padding: 8px 12px; border-radius: 10px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: var(--accent); }
-        .meal-block { background: #fff; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .meal-block h3 { margin: 0 0 10px 0; font-size: 16px; color: #333; }
-        .input-row { display: flex; gap: 8px; }
-        .icon-btn { background: #f0f0f0; border: none; border-radius: 10px; width: 44px; height: 44px; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-        .icon-btn.recording { background: #ff3b30; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        /* Дневник */
+        .meal-card { background: #fff; padding: 15px; border-radius: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .meal-card h4 { margin: 0 0 10px 0; display: flex; justify-content: space-between; align-items: center; color: #333; font-size: 16px;}
+        .diary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .date-picker { width: auto; font-weight: bold; color: var(--accent); padding: 8px 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
@@ -112,7 +104,6 @@
         <span style="font-size:40px; display:block; margin-bottom:10px;">🩺</span>
         <h3 style="margin-top:0;">Анализ здоровья</h3>
         <p style="color:#666; font-size:14px;">Здесь ИИ сформирует ваши личные дефициты и цели на основе загруженных анализов.</p>
-        <button class="btn btn-main" style="opacity:0.5" disabled>Сформировать правила</button>
     </div>
 </div>
 
@@ -121,176 +112,65 @@
     <div style="background:#fff; padding:20px; border-radius:15px; box-shadow:0 2px 8px rgba(0,0,0,0.05); text-align:center;">
         <span style="font-size:40px; display:block; margin-bottom:10px;">🥑</span>
         <h3 style="margin-top:0;">Кето-меню</h3>
-        <p style="color:#666; font-size:14px;">Здесь будет ваш персональный план питания, адаптированный под выводы Заботы.</p>
+        <p style="color:#666; font-size:14px;">Ваш персональный план питания.</p>
     </div>
 </div>
 
 <div id="p-diary" class="page">
-    <div class="diary-date-header">
+    <div class="diary-header">
         <h2 style="margin:0">Дневник</h2>
-        <input type="date" id="diary-date" class="date-picker">
+        <input type="date" id="diary-date" class="date-picker" onchange="loadDiary()">
     </div>
 
-    <div class="meal-block">
-        <h3>🍳 Завтрак</h3>
-        <div class="input-row">
-            <input type="text" id="meal-txt-breakfast" placeholder="Что вы ели?">
-            <button class="icon-btn" id="mic-breakfast" onclick="toggleDictation('breakfast')">🎙️</button>
-            <button class="icon-btn" onclick="triggerMealPhoto('breakfast')">📷</button>
+    <div id="diary-content">
+        <div class="meal-card">
+            <h4><span>🍳 Завтрак</span> <button class="btn-sec" style="width:auto; padding:4px 12px; font-size:12px; border-radius:8px;" onclick="saveMeal('breakfast')">Внести</button></h4>
+            <textarea id="txt-breakfast" placeholder="Что вы ели? Напишите текстом"></textarea>
         </div>
-        <button class="btn btn-sec btn-small" onclick="mockAnalyze('Завтрак')">✨ Оценить завтрак</button>
-    </div>
-
-    <div class="meal-block">
-        <h3>🍲 Обед</h3>
-        <div class="input-row">
-            <input type="text" id="meal-txt-lunch" placeholder="Что вы ели?">
-            <button class="icon-btn" id="mic-lunch" onclick="toggleDictation('lunch')">🎙️</button>
-            <button class="icon-btn" onclick="triggerMealPhoto('lunch')">📷</button>
+        
+        <div class="meal-card">
+            <h4><span>🍲 Обед</span> <button class="btn-sec" style="width:auto; padding:4px 12px; font-size:12px; border-radius:8px;" onclick="saveMeal('lunch')">Внести</button></h4>
+            <textarea id="txt-lunch" placeholder="Что вы ели? Напишите текстом"></textarea>
         </div>
-        <button class="btn btn-sec btn-small" onclick="mockAnalyze('Обед')">✨ Оценить обед</button>
-    </div>
-
-    <div class="meal-block">
-        <h3>🥗 Ужин</h3>
-        <div class="input-row">
-            <input type="text" id="meal-txt-dinner" placeholder="Что вы ели?">
-            <button class="icon-btn" id="mic-dinner" onclick="toggleDictation('dinner')">🎙️</button>
-            <button class="icon-btn" onclick="triggerMealPhoto('dinner')">📷</button>
+        
+        <div class="meal-card">
+            <h4><span>🥗 Ужин</span> <button class="btn-sec" style="width:auto; padding:4px 12px; font-size:12px; border-radius:8px;" onclick="saveMeal('dinner')">Внести</button></h4>
+            <textarea id="txt-dinner" placeholder="Что вы ели? Напишите текстом"></textarea>
         </div>
-        <button class="btn btn-sec btn-small" onclick="mockAnalyze('Ужин')">✨ Оценить ужин</button>
-    </div>
 
-    <div class="meal-block">
-        <h3>🍏 Перекус</h3>
-        <div class="input-row">
-            <input type="text" id="meal-txt-snack" placeholder="Что вы ели?">
-            <button class="icon-btn" id="mic-snack" onclick="toggleDictation('snack')">🎙️</button>
-            <button class="icon-btn" onclick="triggerMealPhoto('snack')">📷</button>
+        <div class="meal-card">
+            <h4><span>🍏 Перекус</span> <button class="btn-sec" style="width:auto; padding:4px 12px; font-size:12px; border-radius:8px;" onclick="saveMeal('snack')">Внести</button></h4>
+            <textarea id="txt-snack" placeholder="Что вы ели? Напишите текстом"></textarea>
         </div>
-        <button class="btn btn-sec btn-small" onclick="mockAnalyze('Перекус')">✨ Оценить перекус</button>
+        
+        <div class="meal-card" style="border-left: 4px solid #ff9500;">
+            <h4><span>🧘‍♂️ Дневник состояний</span> <button class="btn-sec" style="width:auto; padding:4px 12px; font-size:12px; border-radius:8px; border-color:#ff9500; color:#ff9500;" onclick="saveMeal('state')">Внести</button></h4>
+            <textarea id="txt-state" placeholder="Опишите ваши ощущения по телу, уровню энергии или настроению за сегодня..."></textarea>
+        </div>
     </div>
-
-    <button class="btn btn-main" style="margin-top:10px; background:#28a745;" onclick="mockAnalyze('Весь день')">📊 АНАЛИТИКА ЗА ДЕНЬ</button>
+    
+    <button class="btn btn-main" style="background:#28a745" onclick="tg.showAlert('Функция аналитики находится в разработке!')">📊 АНАЛИТИКА ДНЯ</button>
 </div>
 
 <div class="nav-bar">
-    <div class="nav-item active" onclick="switchTab('p-profile', this)">
-        <span class="nav-icon">👤</span>Профиль
-    </div>
-    <div class="nav-item" onclick="switchTab('p-care', this)">
-        <span class="nav-icon">❤️</span>Забота
-    </div>
-    <div class="nav-item" onclick="switchTab('p-ration', this)">
-        <span class="nav-icon">🥑</span>Рацион
-    </div>
-    <div class="nav-item" onclick="switchTab('p-diary', this)">
-        <span class="nav-icon">📓</span>Дневник
-    </div>
+    <div class="nav-item active" onclick="switchTab('p-profile', this)"><span class="nav-icon">👤</span>Профиль</div>
+    <div class="nav-item" onclick="switchTab('p-care', this)"><span class="nav-icon">❤️</span>Забота</div>
+    <div class="nav-item" onclick="switchTab('p-ration', this)"><span class="nav-icon">🥑</span>Рацион</div>
+    <div class="nav-item" onclick="switchTab('p-diary', this)"><span class="nav-icon">📓</span>Дневник</div>
 </div>
 
 <input type="file" id="file-picker" style="display:none" onchange="uploadFile(this)">
-<input type="file" id="meal-photo-picker" style="display:none" accept="image/*" onchange="handleMealPhoto(this)">
 
 <script>
     let tg = window.Telegram.WebApp; 
     tg.expand();
     
-    // ВАЖНО: Замените URL на ваш актуальный ngrok-адрес
+    // ВАЖНО: Замени на актуальный ngrok URL
     const API_URL = "https://depletion-kindling-diffusive.ngrok-free.dev"; 
+    const USER_ID = tg.initDataUnsafe?.user?.id || 777;
 
-    // --- ЛОГИКА ВКЛАДОК ---
-    function switchTab(tabId, el) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        el.classList.add('active');
-    }
-
-    // --- ЛОГИКА ДНЕВНИКА ---
-    // Установка сегодняшней даты
-    document.getElementById('diary-date').valueAsDate = new Date();
-
-    // Заглушка для кнопок анализа
-    function mockAnalyze(target) {
-        tg.showAlert(`Отправляем ${target} в ИИ-нутрициологу...\nСкоро здесь будет красивый JSON-ответ с баллами.`);
-    }
-
-    // Фото еды
-    let currentMealType = '';
-    function triggerMealPhoto(meal) {
-        currentMealType = meal;
-        document.getElementById('meal-photo-picker').click();
-    }
-    function handleMealPhoto(input) {
-        if (!input.files[0]) return;
-        tg.showAlert(`Фото для ${currentMealType} выбрано. В будущем отправим его на API.`);
-        // Сброс инпута
-        input.value = '';
-    }
-
-    // Голосовой ввод (Web Speech API)
-    let recognition = null;
-    let activeMicMeal = null;
-
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRec();
-        recognition.lang = 'ru-RU';
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onresult = function(event) {
-            const text = event.results[0][0].transcript;
-            if(activeMicMeal) {
-                document.getElementById(`meal-txt-${activeMicMeal}`).value += " " + text;
-            }
-        };
-
-        recognition.onend = function() {
-            if(activeMicMeal) {
-                document.getElementById(`mic-${activeMicMeal}`).classList.remove('recording');
-                activeMicMeal = null;
-            }
-        };
-
-        recognition.onerror = function(event) {
-            console.error("Speech error", event);
-            if(activeMicMeal) {
-                document.getElementById(`mic-${activeMicMeal}`).classList.remove('recording');
-                activeMicMeal = null;
-            }
-        };
-    }
-
-    function toggleDictation(meal) {
-        if (!recognition) {
-            tg.showAlert("Голосовой ввод не поддерживается вашим устройством внутри Telegram.");
-            return;
-        }
-
-        const micBtn = document.getElementById(`mic-${meal}`);
-        
-        // Если уже идет запись - останавливаем
-        if (activeMicMeal === meal) {
-            recognition.stop();
-            return;
-        }
-
-        // Если писали в другое поле - обрываем
-        if (activeMicMeal) {
-            document.getElementById(`mic-${activeMicMeal}`).classList.remove('recording');
-            recognition.stop();
-        }
-
-        activeMicMeal = meal;
-        micBtn.classList.add('recording');
-        try { recognition.start(); } catch(e) {}
-    }
-
-
-    // --- ЛОГИКА ПРОФИЛЯ И ТЕСТА (ОСТАЛАСЬ БЕЗ ИЗМЕНЕНИЙ) ---
     let test_res = { air: null, fire: null, water: null, earth: null };
+
     const TEXTS = {
         air: ["1. Ведущий: Мир — система.", "2. Проводник: Мыслительный процесс.", "3. Хрупкий: Боязнь ошибки.", "4. Опора: Инструкции и правила."],
         fire: ["1. Ведущий: Моя воля — закон.", "2. Проводник: Вдохновляю других.", "3. Хрупкий: Трудный выбор.", "4. Опора: Выбор делегирую."],
@@ -298,12 +178,73 @@
         earth: ["1. Ведущий: Здоровье тела.", "2. Проводник: Забота и быт.", "3. Хрупкий: Мнительность.", "4. Опора: Тело — инструмент."]
     };
 
+    // --- НАВИГАЦИЯ ---
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        el.classList.add('active');
+        
+        // Если перешли в дневник - сразу грузим данные
+        if(tabId === 'p-diary') loadDiary();
+    }
+
+    // --- ЛОГИКА ДНЕВНИКА ---
+    async function loadDiary() {
+        const date = document.getElementById('diary-date').value;
+        try {
+            const r = await fetch(`${API_URL}/api/get_diary/${USER_ID}?date=${date}`, {
+                headers: { "ngrok-skip-browser-warning": "true" }
+            });
+            const data = await r.json();
+            
+            // Очищаем поля перед заполнением
+            ['breakfast', 'lunch', 'dinner', 'snack', 'state'].forEach(type => {
+                document.getElementById(`txt-${type}`).value = "";
+            });
+            
+            // Заполняем данными из базы
+            for (const [type, info] of Object.entries(data)) {
+                if(document.getElementById(`txt-${type}`)) {
+                    document.getElementById(`txt-${type}`).value = info.text || "";
+                }
+            }
+        } catch (e) {
+            console.error("Ошибка загрузки дневника:", e);
+        }
+    }
+
+    async function saveMeal(type) {
+        const text = document.getElementById(`txt-${type}`).value;
+        const date = document.getElementById('diary-date').value;
+        
+        try {
+            await fetch(`${API_URL}/api/save_diary_text/${USER_ID}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', "ngrok-skip-browser-warning": "true" },
+                body: JSON.stringify({ type: type, text: text, date: date })
+            });
+            // Небольшая вибрация, если поддерживается устройством
+            tg.HapticFeedback.notificationOccurred('success');
+            tg.showAlert("Запись сохранена!");
+        } catch(e) {
+            console.error("Ошибка сохранения записи:", e);
+            tg.showAlert("Ошибка сохранения!");
+        }
+    }
+
+    // --- ЛОГИКА ПРОФИЛЯ И ТЕСТА ---
     async function init() {
+        // Ставим сегодняшнюю дату в дневник
+        document.getElementById('diary-date').valueAsDate = new Date();
+
+        // Заполняем списки давления
         const s = document.getElementById('in_bp_sys'), d = document.getElementById('in_bp_dia');
         for(let i=80; i<=200; i+=10) { let opt = document.createElement('option'); opt.value = i; opt.text = i; s.appendChild(opt); }
         for(let i=50; i<=120; i+=10) { let opt = document.createElement('option'); opt.value = i; opt.text = i; d.appendChild(opt); }
-        s.value = "120"; d.value = "80";
+        s.value = "120"; d.value = "80"; 
 
+        // Рендерим тест
         const cont = document.getElementById('test-cont');
         [{id:'air', n:'Воздух'}, {id:'fire', n:'Огонь'}, {id:'water', n:'Вода'}, {id:'earth', n:'Земля'}].forEach(el => {
             let wrapper = document.createElement('div');
@@ -322,8 +263,11 @@
             cont.appendChild(wrapper);
         });
 
+        // Загружаем данные профиля
         try {
-            const r = await fetch(`${API_URL}/api/get_profile/${tg.initDataUnsafe?.user?.id || 777}`, { headers: { "ngrok-skip-browser-warning": "true" } });
+            const r = await fetch(`${API_URL}/api/get_profile/${USER_ID}`, {
+                headers: { "ngrok-skip-browser-warning": "true" }
+            });
             const d_api = await r.json();
             
             if(d_api.status !== "new") {
@@ -332,9 +276,13 @@
                 if(d_api.weight) document.getElementById('in_weight').value = d_api.weight;
                 if(d_api.pulse) document.getElementById('in_pulse').value = d_api.pulse;
                 if(d_api.gender) document.getElementById('in_gender').value = d_api.gender;
+                
                 if(d_api.blood_pressure) {
                     const b = d_api.blood_pressure.split('/');
-                    if(b.length === 2) { document.getElementById('in_bp_sys').value = b[0]; document.getElementById('in_bp_dia').value = b[1]; }
+                    if(b.length === 2) {
+                        document.getElementById('in_bp_sys').value = b[0];
+                        document.getElementById('in_bp_dia').value = b[1];
+                    }
                 }
 
                 test_res.air = d_api.air_pos || null;
@@ -357,27 +305,48 @@
                         <div class="psy-line">🌍 ${TEXTS.earth[d_api.earth_pos-1]}</div>`;
                     document.getElementById('psy-display').style.display = 'block';
                     document.getElementById('test-sec').style.display = 'none';
-                } else { updateCardStates(); }
+                } else {
+                    updateCardStates();
+                }
             }
-        } catch (e) { console.error("Ошибка загрузки профиля:", e); }
+        } catch (e) {
+            console.error("Ошибка загрузки профиля:", e);
+        }
     }
 
     function updateCardStates() {
         document.querySelectorAll('.card').forEach(card => {
             const cardType = card.getAttribute('data-type');
             const cardPos = parseInt(card.getAttribute('data-pos'));
+            
             let isUsedByOther = false;
-            for (let k in test_res) { if (k !== cardType && test_res[k] === cardPos) { isUsedByOther = true; break; } }
-            if (isUsedByOther) card.classList.add('disabled'); else card.classList.remove('disabled');
+            for (let k in test_res) {
+                if (k !== cardType && test_res[k] === cardPos) {
+                    isUsedByOther = true;
+                    break;
+                }
+            }
+            
+            if (isUsedByOther) {
+                card.classList.add('disabled');
+            } else {
+                card.classList.remove('disabled');
+            }
         });
     }
 
     function sel(t, p, el) {
         if (el.classList.contains('disabled')) return; 
+
         document.querySelectorAll(`[data-type="${t}"]`).forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected'); test_res[t] = p;
+        el.classList.add('selected'); 
+        test_res[t] = p;
+        
         updateCardStates();
-        if(Object.values(test_res).every(v => v !== null)) document.getElementById('ready-btn').style.display = 'block';
+
+        if(Object.values(test_res).every(v => v !== null)) {
+            document.getElementById('ready-btn').style.display = 'block';
+        }
     }
 
     async function saveData(isTest) {
@@ -388,12 +357,26 @@
             pulse: document.getElementById('in_pulse').value || null,
             gender: document.getElementById('in_gender').value,
             blood_pressure: document.getElementById('in_bp_sys').value + '/' + document.getElementById('in_bp_dia').value,
-            air_pos: test_res.air, fire_pos: test_res.fire, water_pos: test_res.water, earth_pos: test_res.earth
+            air_pos: test_res.air,
+            fire_pos: test_res.fire,
+            water_pos: test_res.water,
+            earth_pos: test_res.earth
         };
+
         try {
-            await fetch(`${API_URL}/api/save_profile/${tg.initDataUnsafe?.user?.id || 777}`, { method:'POST', headers: {'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'}, body: JSON.stringify(payload) });
+            await fetch(`${API_URL}/api/save_profile/${USER_ID}`, { 
+                method:'POST', 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                }, 
+                body: JSON.stringify(payload) 
+            });
+            
             if(isTest) tg.close(); else location.reload();
-        } catch (e) { console.error("Ошибка сохранения:", e); tg.showAlert("Ошибка сохранения данных"); }
+        } catch (e) {
+            console.error("Ошибка сохранения профиля:", e);
+        }
     }
 
     function toggleEdit() {
@@ -403,15 +386,24 @@
 
     let upT = '';
     function pick(t) { upT = t; document.getElementById('file-picker').click(); }
+
     async function uploadFile(input) {
         if (!input.files[0]) return;
         const f = new FormData(); f.append('file', input.files[0]);
+        
         try {
-            await fetch(`${API_URL}/api/upload_photo/${tg.initDataUnsafe?.user?.id || 777}/${upT}`, { method:'POST', headers: { "ngrok-skip-browser-warning": "true" }, body: f });
+            await fetch(`${API_URL}/api/upload_photo/${USER_ID}/${upT}`, { 
+                method:'POST', 
+                headers: { "ngrok-skip-browser-warning": "true" },
+                body: f 
+            });
             document.getElementById(upT+'-box').innerHTML = `<div class="status-msg">✅ Загружено. <span onclick="pick('${upT}')" style="text-decoration:underline; cursor:pointer">Еще</span></div>`;
-        } catch (e) {}
+        } catch (e) {
+            console.error("Ошибка загрузки фото:", e);
+        }
     }
 
+    // Запускаем инициализацию при старте
     init();
 </script>
 </body>
